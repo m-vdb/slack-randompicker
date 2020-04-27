@@ -5,6 +5,7 @@ from typing import List, Text
 
 from flask import Flask, request
 from slack import WebClient
+import requests
 
 from .parser import parse_command
 
@@ -61,7 +62,8 @@ def slashcommand():
     app.logger.info("Incoming command %s", request.form["text"])
     params = parse_command(request.form["text"])
     if params is None:
-        return HELP
+        send_immediate_slack_message(request.form["response_url"], HELP)
+        return "OK, help"
 
     app.logger.info("Handling slash command with params %s", params)
 
@@ -69,7 +71,8 @@ def slashcommand():
 
     if not params.get("frequency"):
         user = random.choice(users)
-        return format_slack_message(user, params['task'])
+        send_immediate_slack_message(request.form["response_url"], format_slack_message(user, params['task']))
+        return "OK"
 
     # TODO: parse frequency and make sure we understand it
     # TODO: validate group id against api
@@ -96,3 +99,12 @@ def format_slack_message(user: Text, task: Text) -> Text:
     Format Slack message to send to member.
     """
     return f"<@{user}> you have been picked to {task}"
+
+
+def send_immediate_slack_message(webhook_url: Text, message: Text):
+    """
+    Send an immediate Slack message using the webhook URL
+    sent by Slack.
+    """
+    response = requests.post(webhook_url, json={"text": message})
+    response.raise_for_status()

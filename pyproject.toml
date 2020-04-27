@@ -9,6 +9,7 @@ python = "^3.7"
 flask = "^1.1.2"
 pytest = "^5.4.1"
 slackclient = "^2.5.0"
+requests = "^2.23.0"
 
 [tool.poetry.dev-dependencies]
 
