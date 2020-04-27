@@ -1,5 +1,7 @@
 import logging.config
 import os
+import random
+from typing import List, Text
 
 from flask import Flask, request
 from slack import WebClient
@@ -25,6 +27,9 @@ logging.config.dictConfig({
 
 
 app = Flask(__name__)
+
+
+slack_client = WebClient(token=os.environ["SLACK_TOKEN"])
 
 
 HELP = (
@@ -60,11 +65,34 @@ def slashcommand():
 
     app.logger.info("Handling slash command with params %s", params)
 
+    users = list_users_target(params["target"])
+
     if not params.get("frequency"):
-        # TODO: slack API call to get group or channel users
-        return "OK"
+        user = random.choice(users)
+        return format_slack_message(user, params['task'])
 
     # TODO: parse frequency and make sure we understand it
     # TODO: validate group id against api
     # TODO: store command somewhere
     return "OK, later"
+
+
+def list_users_target(target: Text) -> List[Text]:
+    """
+    List users from a channel or usergroup.
+    """
+    if target.startswith("C"):  # channel
+        response = slack_client.conversations_members(channel=target)
+        return response["members"]
+    elif target.startswith("S"):  # usergroup
+        response = slack_client.usergroups_users_list(usergroup=target)
+        return response["users"]
+
+    raise ValueError(f"Unknown type for Slack ID {target}")
+
+
+def format_slack_message(user: Text, task: Text) -> Text:
+    """
+    Format Slack message to send to member.
+    """
+    return f"<@{user}> you have been picked to {task}"
