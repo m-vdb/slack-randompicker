@@ -1,6 +1,8 @@
 import logging.config
+import os
 
 from flask import Flask, request
+from slack import WebClient
 
 from .parser import parse_command
 
@@ -38,13 +40,18 @@ HELP = (
 def slashcommand():
     """
     Endpoint that receives `/pickrandom` command. Form data contains:
-    - token: Slack token for signing
     - command: the name of the command that was sent
     - text: the content of the command (after the `/pickrandom`)
     - response_url: a temporary webhook URL to generate messages responses
     """
 
-    # 1. check token
+    if not WebClient.validate_slack_signature(
+        signing_secret=os.environ["SLACK_SIGNING_SECRET"],
+        data=request.get_data(as_text=True),
+        timestamp=request.headers['X-Slack-Request-Timestamp'],
+        signature=request.headers['X-Slack-Signature'],
+    ):
+        return "Invalid secret", 401
 
     app.logger.info("Incoming command %s", request.form["text"])
     params = parse_command(request.form["text"])
