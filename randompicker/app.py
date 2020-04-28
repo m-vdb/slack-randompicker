@@ -7,7 +7,7 @@ from flask import Flask, request
 from slack import WebClient
 import requests
 
-from .parser import parse_command
+from .parser import parse_command, parse_frequency
 
 
 logging.config.dictConfig({
@@ -74,9 +74,17 @@ def slashcommand():
         send_immediate_slack_message(request.form["response_url"], format_slack_message(user, params['task']))
         return "OK"
 
-    # TODO: parse frequency and make sure we understand it
-    # TODO: validate group id against api
+    frequency = parse_frequency(params=params["frequency"])
+    if frequency is None:
+        send_immediate_slack_message(request.form["response_url"], HELP)
+        return "OK, cannot parse frequency"
+
     # TODO: store command somewhere
+    send_immediate_slack_message(
+        request.form["response_url"],
+        f"OK, I will pick someone "
+        f"to {params['task']} {params['frequency']}"
+    )
     return "OK, later"
 
 
