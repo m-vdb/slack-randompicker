@@ -10,21 +10,24 @@ import requests
 from .parser import parse_command, parse_frequency
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+            }
+        },
+        "handlers": {
+            "wsgi": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://flask.logging.wsgi_errors_stream",
+                "formatter": "default",
+            }
+        },
+        "root": {"level": "INFO", "handlers": ["wsgi"]},
     }
-})
+)
 
 
 app = Flask(__name__)
@@ -42,7 +45,7 @@ HELP = (
 )
 
 
-@app.route('/slashcommand', methods=["POST"])
+@app.route("/slashcommand", methods=["POST"])
 def slashcommand():
     """
     Endpoint that receives `/pickrandom` command. Form data contains:
@@ -54,8 +57,8 @@ def slashcommand():
     if not WebClient.validate_slack_signature(
         signing_secret=os.environ["SLACK_SIGNING_SECRET"],
         data=request.get_data(as_text=True),
-        timestamp=request.headers['X-Slack-Request-Timestamp'],
-        signature=request.headers['X-Slack-Signature'],
+        timestamp=request.headers["X-Slack-Request-Timestamp"],
+        signature=request.headers["X-Slack-Signature"],
     ):
         return "Invalid secret", 401
 
@@ -71,7 +74,9 @@ def slashcommand():
 
     if not params.get("frequency"):
         user = random.choice(users)
-        send_immediate_slack_message(request.form["response_url"], format_slack_message(user, params['task']))
+        send_immediate_slack_message(
+            request.form["response_url"], format_slack_message(user, params["task"])
+        )
         return "OK"
 
     frequency = parse_frequency(params=params["frequency"])
@@ -82,8 +87,7 @@ def slashcommand():
     # TODO: store command somewhere
     send_immediate_slack_message(
         request.form["response_url"],
-        f"OK, I will pick someone "
-        f"to {params['task']} {params['frequency']}"
+        f"OK, I will pick someone " f"to {params['task']} {params['frequency']}",
     )
     return "OK, later"
 

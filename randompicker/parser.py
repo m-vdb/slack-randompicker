@@ -6,10 +6,10 @@ from dateutil.rrule import rrulestr, rrule
 import recurrent
 
 
-HELP_RE = re.compile(r'^help.*$')
+HELP_RE = re.compile(r"^help.*$")
 
 
-FREQUENCY_PATTERN = r'(on|every|next|today|tomorrow) (.+)'
+FREQUENCY_PATTERN = r"(on|every|next|today|tomorrow) (.+)"
 
 
 # /pickrandom @group to do something
@@ -18,9 +18,9 @@ FREQUENCY_PATTERN = r'(on|every|next|today|tomorrow) (.+)'
 # /pickrandom @group to do something on Monday at 9am
 # /pickrandom @group to do something next Monday at 9am
 COMMAND_RE = re.compile(
-    fr'^<[@#](?P<target>[A-Z0-9]+)(?:|[^>]+)?>\s+'  # group or channel id
-    fr'to (?P<task>.+?)\s*'  # task to do
-    fr'(?P<frequency>{FREQUENCY_PATTERN})?$'  # optional date or frequency
+    fr"^<[@#](?P<target>[A-Z0-9]+)(?:|[^>]+)?>\s+"  # group or channel id
+    fr"to (?P<task>.+?)\s*"  # task to do
+    fr"(?P<frequency>{FREQUENCY_PATTERN})?$"  # optional date or frequency
 )
 
 
@@ -46,4 +46,4 @@ def parse_frequency(frequency: Text) -> Optional[Union[Text, rrule]]:
             return None
     else:
         # TODO: timezone, should be in bot settings
-        return dateparser.parse(frequency, settings={'PREFER_DATES_FROM': 'future'})
+        return dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
