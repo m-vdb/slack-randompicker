@@ -1,0 +1,68 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout git repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install poetry
+      uses: Gr1N/setup-poetry@v1
+
+    - name: Load Poetry Cached Libraries
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: ${{ runner.os }}-poetry-3.7-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: ${{ runner.os }}-poetry-3.7
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run tests
+      run: poetry run pytest
+
+  quality:
+    name: Code quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout git repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install poetry
+      uses: Gr1N/setup-poetry@v1
+
+    - name: Load Poetry Cached Libraries
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: ${{ runner.os }}-poetry-3.7-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: ${{ runner.os }}-poetry-3.7
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run black
+      run: poetry run black . --check
+
+    - name: Type checking
+      run: poetry run mypy */**.py --ignore-missing-imports
