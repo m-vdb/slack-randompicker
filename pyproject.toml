@@ -6,7 +6,6 @@ authors = ["m-vdb"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-flask = "^1.1.2"
 pytest = "^5.4.1"
 slackclient = "^2.5.0"
 requests = "^2.23.0"
@@ -16,6 +15,7 @@ python-dateutil = "^2.8.1"
 pytest-freezegun = "^0.4.1"
 black = "^19.10b0"
 mypy = "^0.770"
+sanic = "^19.12.2"
 
 [tool.poetry.dev-dependencies]
 

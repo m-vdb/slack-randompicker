@@ -1,39 +1,21 @@
-import logging.config
 import os
+from pathlib import Path
 import random
+import sys
 from typing import List, Text
 
-from flask import Flask, request
+from sanic import Sanic, response
+from sanic.log import logger
 from slack import WebClient
 import requests
 
-from .parser import parse_command, parse_frequency
+from randompicker.parser import parse_command, parse_frequency
 
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
-        },
-        "handlers": {
-            "wsgi": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://flask.logging.wsgi_errors_stream",
-                "formatter": "default",
-            }
-        },
-        "root": {"level": "INFO", "handlers": ["wsgi"]},
-    }
-)
+app = Sanic()
 
 
-app = Flask(__name__)
-
-
-slack_client = WebClient(token=os.environ["SLACK_TOKEN"])
+slack_client = WebClient(token=os.environ["SLACK_TOKEN"], run_async=True)
 
 
 HELP = (
@@ -46,7 +28,7 @@ HELP = (
 
 
 @app.route("/slashcommand", methods=["POST"])
-def slashcommand():
+async def slashcommand(request):
     """
     Endpoint that receives `/pickrandom` command. Form data contains:
     - command: the name of the command that was sent
@@ -56,52 +38,54 @@ def slashcommand():
 
     if not WebClient.validate_slack_signature(
         signing_secret=os.environ["SLACK_SIGNING_SECRET"],
-        data=request.get_data(as_text=True),
+        data=request.body.decode("utf-8"),
         timestamp=request.headers["X-Slack-Request-Timestamp"],
         signature=request.headers["X-Slack-Signature"],
     ):
-        return "Invalid secret", 401
+        return response.text("Invalid secret", status=401)
 
-    app.logger.info("Incoming command %s", request.form["text"])
-    params = parse_command(request.form["text"])
+    command = request.form["text"][0]
+    webhook_url = request.form["response_url"][0]
+    logger.info("Incoming command %s", command)
+    params = parse_command(command)
     if params is None:
-        send_immediate_slack_message(request.form["response_url"], HELP)
-        return "OK, help"
+        send_immediate_slack_message(webhook_url, HELP)
+        return response.text("OK, help")
 
-    app.logger.info("Handling slash command with params %s", params)
+    logger.info("Handling slash command with params %s", params)
 
-    users = list_users_target(params["target"])
+    users = await list_users_target(params["target"])
 
     if not params.get("frequency"):
         user = random.choice(users)
         send_immediate_slack_message(
-            request.form["response_url"], format_slack_message(user, params["task"])
+            webhook_url, format_slack_message(user, params["task"])
         )
-        return "OK"
+        return response.text("OK")
 
     frequency = parse_frequency(params=params["frequency"])
     if frequency is None:
-        send_immediate_slack_message(request.form["response_url"], HELP)
+        send_immediate_slack_message(webhook_url, HELP)
         return "OK, cannot parse frequency"
 
     # TODO: store command somewhere
     send_immediate_slack_message(
-        request.form["response_url"],
+        webhook_url,
         f"OK, I will pick someone " f"to {params['task']} {params['frequency']}",
     )
-    return "OK, later"
+    return response.text("OK, later")
 
 
-def list_users_target(target: Text) -> List[Text]:
+async def list_users_target(target: Text) -> List[Text]:
     """
     List users from a channel or usergroup.
     """
     if target.startswith("C"):  # channel
-        response = slack_client.conversations_members(channel=target)
-        return response["members"]
+        channel_info = await slack_client.conversations_members(channel=target)
+        return channel_info["members"]
     elif target.startswith("S"):  # usergroup
-        response = slack_client.usergroups_users_list(usergroup=target)
-        return response["users"]
+        group_info = await slack_client.usergroups_users_list(usergroup=target)
+        return group_info["users"]
 
     raise ValueError(f"Unknown type for Slack ID {target}")
 
@@ -118,5 +102,9 @@ def send_immediate_slack_message(webhook_url: Text, message: Text):
     Send an immediate Slack message using the webhook URL
     sent by Slack.
     """
-    response = requests.post(webhook_url, json={"text": message})
-    response.raise_for_status()
+    api_response = requests.post(webhook_url, json={"text": message})
+    api_response.raise_for_status()
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, access_log=True)
