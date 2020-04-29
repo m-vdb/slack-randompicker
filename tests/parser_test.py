@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from dateutil.rrule import rrulestr
 import pytest
+from recurrent import RecurringEvent
 
 from randompicker import parser
 
@@ -37,15 +37,27 @@ def test_parse_command(command, expected):
 
 
 test_frequencies = [
-    ("every day", rrulestr("RRULE:INTERVAL=1;FREQ=DAILY")),
-    ("every year", rrulestr("RRULE:INTERVAL=1;FREQ=YEARLY")),
-    ("every tuesday", rrulestr("RRULE:BYDAY=TU;INTERVAL=1;FREQ=WEEKLY")),
+    ("every day", {"freq": "daily", "interval": 1}),
+    ("every year", {"interval": 1, "freq": "yearly"}),
+    ("every tuesday", {"byday": "TU", "freq": "weekly", "interval": 1}),
+    (
+        "every tuesday at 9am",
+        {
+            "byday": "TU",
+            "byhour": "9",
+            "byminute": "0",
+            "freq": "weekly",
+            "interval": 1,
+        },
+    ),
 ]
 
 
 @pytest.mark.parametrize("frequency,expected", test_frequencies)
 def test_parse_frequency(frequency, expected):
-    assert str(parser.parse_frequency(frequency)) == str(expected)
+    output = parser.parse_frequency(frequency)
+    assert isinstance(output, RecurringEvent)
+    assert output.get_params() == expected
 
 
 test_specific_dates = [

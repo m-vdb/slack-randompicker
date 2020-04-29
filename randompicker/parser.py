@@ -1,9 +1,10 @@
+from datetime import datetime
 import re
 from typing import Optional, Text, Union
 
 import dateparser
-from dateutil.rrule import rrulestr, rrule
-import recurrent
+from dateutil.rrule import rrulestr
+from recurrent import RecurringEvent
 
 
 HELP_RE = re.compile(r"^help.*$")
@@ -35,15 +36,17 @@ def parse_command(command: str) -> Optional[dict]:
     return match.groupdict() if match else None
 
 
-def parse_frequency(frequency: Text) -> Optional[Union[Text, rrule]]:
+def parse_frequency(frequency: Text) -> Optional[Union[datetime, RecurringEvent]]:
     """
     Parse frequency or date using `recurrent` and `dateparser` module.
     """
     if frequency.startswith("every"):
+        rec = RecurringEvent()
+        parsed_rrule = rec.parse(frequency)
         try:
-            return rrulestr(recurrent.parse(frequency))
+            rrulestr(parsed_rrule)  # this validates the parsing
+            return rec
         except (ValueError, TypeError):
             return None
     else:
-        # TODO: timezone, should be in bot settings
         return dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
