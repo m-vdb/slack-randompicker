@@ -37,14 +37,23 @@ def test_parse_command(command, expected):
 
 
 test_frequencies = [
-    ("every day", {"freq": "daily", "interval": 1}),
-    ("every year", {"interval": 1, "freq": "yearly"}),
-    ("every tuesday", {"byday": "TU", "freq": "weekly", "interval": 1}),
+    ("every day", {"freq": "daily", "interval": 1, "byhour": "9", "byminute": "0",}),
+    ("every year", {"interval": 1, "freq": "yearly", "byhour": "9", "byminute": "0",}),
     (
-        "every tuesday at 9am",
+        "every tuesday",
         {
             "byday": "TU",
+            "freq": "weekly",
+            "interval": 1,
             "byhour": "9",
+            "byminute": "0",
+        },
+    ),
+    (
+        "every tuesday at 9pm",
+        {
+            "byday": "TU",
+            "byhour": "21",
             "byminute": "0",
             "freq": "weekly",
             "interval": 1,

@@ -45,8 +45,13 @@ def parse_frequency(frequency: Text) -> Optional[Union[datetime, RecurringEvent]
         parsed_rrule = rec.parse(frequency)
         try:
             rrulestr(parsed_rrule)  # this validates the parsing
-            return rec
         except (ValueError, TypeError):
             return None
+        else:
+            # ensure that hours are set, otherwise default to 9am
+            if not rec.byhour and not rec.byminute:
+                rec.byhour.append("9")
+                rec.byminute.append("0")
+            return rec
     else:
         return dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
