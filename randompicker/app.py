@@ -84,11 +84,9 @@ async def slashcommand(request):
 
     logger.info("Handling slash command with params %s", params)
 
-    users = await list_users_target(params["target"])
-
     if not params.get("frequency"):
-        user = random.choice(users)
-        return response.text(format_slack_message(user, params["task"]))
+        await pick_user_and_send_message(channel_id, params["target"], params["task"])
+        return response.text("")
 
     frequency = parse_frequency(params["frequency"])
     if frequency is None:
