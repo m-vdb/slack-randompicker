@@ -75,8 +75,7 @@ async def slashcommand(request):
     logger.info("Incoming command %s", command)
     params = parse_command(command)
     if params is None:
-        send_immediate_slack_message(webhook_url, HELP)
-        return response.text("OK, help")
+        return response.text(HELP)
 
     logger.info("Handling slash command with params %s", params)
 
@@ -84,15 +83,11 @@ async def slashcommand(request):
 
     if not params.get("frequency"):
         user = random.choice(users)
-        send_immediate_slack_message(
-            webhook_url, format_slack_message(user, params["task"])
-        )
-        return response.text("OK")
+        return response.text(format_slack_message(user, params["task"]))
 
     frequency = parse_frequency(params["frequency"])
     if frequency is None:
-        send_immediate_slack_message(webhook_url, HELP)
-        return "OK, cannot parse frequency"
+        return response.text(HELP)
 
     # get user timezone
     user_info = await slack_client.users_info(user=request.form["user_id"][0])
@@ -103,11 +98,9 @@ async def slashcommand(request):
         target=params["target"],
         task=params["task"],
     )
-    send_immediate_slack_message(
-        webhook_url,
-        f"OK, I will pick someone " f"to {params['task']} {params['frequency']}",
+    return response.text(
+        f"OK, I will pick someone " f"to {params['task']} {params['frequency']}"
     )
-    return response.text("OK, later")
 
 
 async def list_users_target(target: Text) -> List[Text]:
@@ -129,15 +122,6 @@ def format_slack_message(user: Text, task: Text) -> Text:
     Format Slack message to send to member.
     """
     return f"<@{user}> you have been picked to {task}"
-
-
-def send_immediate_slack_message(webhook_url: Text, message: Text):
-    """
-    Send an immediate Slack message using the webhook URL
-    sent by Slack.
-    """
-    api_response = requests.post(webhook_url, json={"text": message})
-    api_response.raise_for_status()
 
 
 def schedule_randompick_for_later(
