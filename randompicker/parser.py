@@ -43,6 +43,10 @@ def parse_frequency(frequency: Text) -> Optional[Union[datetime, RecurringEvent]
     if frequency.startswith("every"):
         rec = RecurringEvent()
         parsed_rrule = rec.parse(frequency)
+        if rec.bymonthday or rec.byyearday:
+            # not supported
+            return None
+
         try:
             rrulestr(parsed_rrule)  # this validates the parsing
         except (ValueError, TypeError):
@@ -55,3 +59,64 @@ def parse_frequency(frequency: Text) -> Optional[Union[datetime, RecurringEvent]
             return rec
     else:
         return dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
+
+
+def convert_recurring_event_to_trigger_format(event: RecurringEvent):
+    """
+    Convert RecurringEvent instances to the APScheduler trigger cron format.
+
+    https://github.com/kvh/recurrent
+    https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
+    """
+    params = event.get_params()
+    interval = params.pop("interval")
+    frequency_value = "*" if interval == 1 else f"*/{interval}"
+    frequency_key = RECURRING_EVENT_FREQUENCY_MAPPING[params.pop("freq")]
+
+    trigger_params = {
+        RECURRING_EVENT_PARAMS_MAPPING[param]: (
+            _map_weekdays(value) if param == "byday" else value
+        )
+        for param, value in params.items()
+    }
+    trigger_params[frequency_key] = frequency_value
+    return trigger_params
+
+
+def _map_weekdays(weekdays: Text) -> Text:
+    """
+    Map weekdays to cron compatible weekdays.
+    """
+    return ",".join([WEEKDAY_MAP[weekday] for weekday in weekdays.split(",")])
+
+
+# bymonthday and byyearday are omitted here because they're not supported
+# by apscheduler cron triggers
+RECURRING_EVENT_PARAMS_MAPPING = {
+    "byday": "day_of_week",
+    "bymonth": "month",
+    "byhour": "hour",
+    "byminute": "minute",
+    "dtstart": "start_date",
+    "until": "end_date",
+}
+
+
+RECURRING_EVENT_FREQUENCY_MAPPING = {
+    "daily": "day_of_week",
+    "weekly": "week",
+    "monthly": "month",
+    "yearly": "year",
+    "minutely": "minute",
+    "secondly": "second",
+}
+
+WEEKDAY_MAP = {
+    "MO": "mon",
+    "TU": "tue",
+    "WE": "wed",
+    "TH": "thu",
+    "FR": "fri",
+    "SA": "sat",
+    "SU": "sun",
+}

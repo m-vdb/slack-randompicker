@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from apscheduler.triggers.cron import CronTrigger
 import pytest
 from recurrent import RecurringEvent
 
@@ -93,3 +94,38 @@ test_bad_frequencies = [
 @pytest.mark.parametrize("frequency", test_bad_frequencies)
 def test_parse_frequency_cannot_parse(frequency):
     assert parser.parse_frequency(frequency) is None
+
+
+test_recurring_events_parsing = [
+    ("every day at 12am", {"day_of_week": "*", "hour": "0", "minute": "0",}),
+    (
+        "every Monday at 9am",
+        {"day_of_week": "mon", "hour": "9", "minute": "0", "week": "*"},
+    ),
+    (
+        "every weekday at 11pm",
+        {
+            "day_of_week": "mon,tue,wed,thu,fri",
+            "hour": "23",
+            "minute": "0",
+            "week": "*",
+        },
+    ),
+    (
+        "every Friday and Sunday at 2pm",
+        {"day_of_week": "fri,sun", "hour": "14", "minute": "0", "week": "*"},
+    ),
+    (
+        "every other Wednesday at 2pm",
+        {"day_of_week": "wed", "hour": "14", "minute": "0", "week": "*/2"},
+    ),
+]
+
+
+@pytest.mark.parametrize("frequency,expected", test_recurring_events_parsing)
+def test_convert_recurring_event_to_trigger_format(frequency, expected):
+    event = RecurringEvent()
+    event.parse(frequency)
+    assert parser.convert_recurring_event_to_trigger_format(event) == expected
+    # validate with ApsSchedule cron trigger
+    CronTrigger(**expected)

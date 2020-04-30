@@ -1,21 +1,31 @@
+from datetime import datetime
 import os
 from pathlib import Path
 import random
 import sys
-from typing import List, Text
+from typing import List, Text, Union
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from recurrent import RecurringEvent
+import requests
 from sanic import Sanic, response
 from sanic.log import logger
 from slack import WebClient
-import requests
 
-from randompicker.parser import parse_command, parse_frequency
+from randompicker.parser import (
+    convert_recurring_event_to_trigger_format,
+    parse_command,
+    parse_frequency,
+)
 
 
-app = Sanic()
+app = Sanic("randompicker")
 
 
 slack_client = WebClient(token=os.environ["SLACK_TOKEN"], run_async=True)
+
+
+scheduler: AsyncIOScheduler = None
 
 
 HELP = (
@@ -27,6 +37,21 @@ HELP = (
 )
 
 
+@app.listener("before_server_start")
+async def initialize_scheduler(app, loop):
+    logger.info("Starting job scheduler")
+    global scheduler
+    scheduler = AsyncIOScheduler(
+        {
+            "apscheduler.jobstores.default": {
+                "type": "sqlalchemy",
+                "url": os.environ["DATABASE_URL"],
+            },
+        }
+    )
+    scheduler.start()
+
+
 @app.route("/slashcommand", methods=["POST"])
 async def slashcommand(request):
     """
@@ -34,6 +59,7 @@ async def slashcommand(request):
     - command: the name of the command that was sent
     - text: the content of the command (after the `/pickrandom`)
     - response_url: a temporary webhook URL to generate messages responses
+    - user_id: the user id of the user who triggered the command
     """
 
     if not WebClient.validate_slack_signature(
@@ -63,12 +89,20 @@ async def slashcommand(request):
         )
         return response.text("OK")
 
-    frequency = parse_frequency(params=params["frequency"])
+    frequency = parse_frequency(params["frequency"])
     if frequency is None:
         send_immediate_slack_message(webhook_url, HELP)
         return "OK, cannot parse frequency"
 
-    # TODO: store command somewhere
+    # get user timezone
+    user_info = await slack_client.users_info(user=request.form["user_id"][0])
+    user_tz = user_info["tz"]
+    schedule_randompick_for_later(
+        frequency=frequency,
+        user_tz=user_tz,
+        target=params["target"],
+        task=params["task"],
+    )
     send_immediate_slack_message(
         webhook_url,
         f"OK, I will pick someone " f"to {params['task']} {params['frequency']}",
@@ -104,6 +138,43 @@ def send_immediate_slack_message(webhook_url: Text, message: Text):
     """
     api_response = requests.post(webhook_url, json={"text": message})
     api_response.raise_for_status()
+
+
+def schedule_randompick_for_later(
+    frequency: Union[datetime, RecurringEvent], user_tz: Text, target: Text, task: Text
+):
+    """
+    Schedule a job to send a Slack message later, using the `pick_user_and_send_message`
+    function.
+    """
+    if isinstance(frequency, datetime):
+        trigger_params = {
+            "trigger": "date",
+            "run_date": frequency,
+            "timezone": user_tz,
+        }
+    else:
+        trigger_params = {
+            "trigger": "cron",
+            "timezone": user_tz,
+        }
+        trigger_params.update(convert_recurring_event_to_trigger_format(frequency))
+
+    scheduler.add_job(
+        pick_user_and_send_message,
+        kwargs={"target": target, "task": task},
+        **trigger_params,
+    )
+
+
+async def pick_user_and_send_message(target: Text, task: Text):
+    """
+    This function is scheduled from `schedule_randompick_for_later`.
+    """
+    users = await list_users_target(target)
+    user = random.choice(users)
+    # TODO: send mesage via API
+    logger.info("Sending message to Slack API")
 
 
 if __name__ == "__main__":
