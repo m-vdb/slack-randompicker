@@ -12,6 +12,7 @@ from sanic import Sanic, response
 from sanic.log import logger
 from slack import WebClient
 
+from randompicker.jobs import make_job_id
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
     parse_command,
@@ -58,8 +59,9 @@ async def slashcommand(request):
     Endpoint that receives `/pickrandom` command. Form data contains:
     - command: the name of the command that was sent
     - text: the content of the command (after the `/pickrandom`)
-    - response_url: a temporary webhook URL to generate messages responses
+    - channel_id: the channel in which the command is invoked
     - user_id: the user id of the user who triggered the command
+    - team_id: the workspace id
     """
 
     if not WebClient.validate_slack_signature(
@@ -71,7 +73,10 @@ async def slashcommand(request):
         return response.text("Invalid secret", status=401)
 
     command = request.form["text"][0]
-    webhook_url = request.form["response_url"][0]
+    user_id = request.form["user_id"][0]
+    channel_id = request.form["channel_id"][0]
+    team_id = request.form["team_id"][0]
+
     logger.info("Incoming command %s", command)
     params = parse_command(command)
     if params is None:
@@ -90,13 +95,16 @@ async def slashcommand(request):
         return response.text(HELP)
 
     # get user timezone
-    user_info = await slack_client.users_info(user=request.form["user_id"][0])
+    user_info = await slack_client.users_info(user=user_id)
     user_tz = user_info["tz"]
     schedule_randompick_for_later(
         frequency=frequency,
         user_tz=user_tz,
         target=params["target"],
         task=params["task"],
+        user_id=user_id,
+        channel_id=channel_id,
+        team_id=team_id,
     )
     return response.text(
         f"OK, I will pick someone " f"to {params['task']} {params['frequency']}"
@@ -125,7 +133,13 @@ def format_slack_message(user: Text, task: Text) -> Text:
 
 
 def schedule_randompick_for_later(
-    frequency: Union[datetime, RecurringEvent], user_tz: Text, target: Text, task: Text
+    frequency: Union[datetime, RecurringEvent],
+    user_tz: Text,
+    target: Text,
+    task: Text,
+    user_id: Text,
+    channel_id: Text,
+    team_id: Text,
 ):
     """
     Schedule a job to send a Slack message later, using the `pick_user_and_send_message`
@@ -146,19 +160,23 @@ def schedule_randompick_for_later(
 
     scheduler.add_job(
         pick_user_and_send_message,
-        kwargs={"target": target, "task": task},
+        kwargs={"channel_id": channel_id, "target": target, "task": task},
+        id=make_job_id(team_id, user_id, task),
         **trigger_params,
     )
 
 
-async def pick_user_and_send_message(target: Text, task: Text):
+async def pick_user_and_send_message(channel_id: Text, target: Text, task: Text):
     """
     This function is scheduled from `schedule_randompick_for_later`.
     """
     users = await list_users_target(target)
     user = random.choice(users)
-    # TODO: send mesage via API
     logger.info("Sending message to Slack API")
+    await slack_client.chat_postMessage(
+        channel=channel_id, text=format_slack_message(user, task)
+    )
+    logger.info("Done.")
 
 
 if __name__ == "__main__":
