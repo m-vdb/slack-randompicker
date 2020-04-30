@@ -162,6 +162,7 @@ def schedule_randompick_for_later(
         pick_user_and_send_message,
         kwargs={"channel_id": channel_id, "target": target, "task": task},
         id=make_job_id(team_id, user_id, task, frequency),
+        replace_existing=True,  # replace job with same id
         **trigger_params,
     )
 
