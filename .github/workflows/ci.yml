@@ -33,7 +33,7 @@ jobs:
       run: poetry install
 
     - name: Run tests
-      run: poetry run pytest
+      run: poetry run pytest --cov=randompicker
 
   quality:
     name: Code quality
