@@ -1,9 +1,12 @@
 from datetime import datetime
 import os
 from typing import Text, Union
+import json
 
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
+import requests
 from sanic import Sanic, response
 from sanic.log import logger
 
@@ -103,6 +106,36 @@ async def slashcommand(request):
     return response.text(
         f"OK, I will pick someone " f"to {params['task']} {params['frequency']}"
     )
+
+
+@app.route("/actions", methods=["POST"])
+@requires_slack_signature
+async def actions(request):
+    """
+    This endpoint receives actions and other Interactivity elements from Slack.
+    """
+    payload = json.loads(request.form["payload"][0])
+    team_id = payload["team"]["id"]
+    user_id = payload["user"]["id"]
+    response_url = payload["response_url"]
+
+    for action in payload["actions"]:
+        if action["action_id"] == SLACK_ACTION_REMOVE_JOB:
+            job_id = action["value"]
+            # remove job
+            try:
+                scheduler.remove_job(job_id)
+            except JobLookupError:
+                logger.error(f"Cannot find scheduled job with id {job_id}")
+            else:
+                # update the message the user sees
+                user_jobs = list_user_jobs(scheduler, team_id, user_id)
+                user_jobs_json = await format_user_jobs(user_jobs)
+                resp = requests.post(response_url, json=user_jobs_json)
+                resp.raise_for_status()
+            break
+
+    return response.text("OK")
 
 
 def schedule_randompick_for_later(
