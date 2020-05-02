@@ -33,13 +33,13 @@ jobs:
       run: poetry install
 
     - name: Run tests
-      run: poetry run pytest --cov=randompicker
+      run: poetry run pytest --cov=randompicker --cov-report xml
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: .coverage
+        path-to-lcov: coverage.xml
 
   quality:
     name: Code quality
