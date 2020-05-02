@@ -1,7 +1,9 @@
+import functools
 import os
 import random
 from typing import List, Text
 
+from sanic import response
 from sanic.log import logger
 from slack import WebClient
 
@@ -36,3 +38,23 @@ async def pick_user_and_send_message(channel_id: Text, target: Text, task: Text)
         channel=channel_id, text=format_slack_message(user, task)
     )
     logger.info("Done.")
+
+
+def requires_slack_signature(func):
+    """
+    Decorator to require slack signature on sanic endpoints.
+    """
+
+    @functools.wraps(func)
+    async def inner(request):
+        if not WebClient.validate_slack_signature(
+            signing_secret=os.environ["SLACK_SIGNING_SECRET"],
+            data=request.body.decode("utf-8"),
+            timestamp=request.headers["X-Slack-Request-Timestamp"],
+            signature=request.headers["X-Slack-Signature"],
+        ):
+            return response.text("Invalid secret", status=401)
+
+        return await func(request)
+
+    return inner

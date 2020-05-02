@@ -21,6 +21,7 @@ from randompicker.slack_utils import (
     slack_client,
     list_users_target,
     pick_user_and_send_message,
+    requires_slack_signature,
 )
 
 
@@ -46,6 +47,7 @@ async def initialize_scheduler(app, loop):
 
 
 @app.route("/slashcommand", methods=["POST"])
+@requires_slack_signature
 async def slashcommand(request):
     """
     Endpoint that receives `/pickrandom` command. Form data contains:
@@ -55,15 +57,6 @@ async def slashcommand(request):
     - user_id: the user id of the user who triggered the command
     - team_id: the workspace id
     """
-
-    if not WebClient.validate_slack_signature(
-        signing_secret=os.environ["SLACK_SIGNING_SECRET"],
-        data=request.body.decode("utf-8"),
-        timestamp=request.headers["X-Slack-Request-Timestamp"],
-        signature=request.headers["X-Slack-Signature"],
-    ):
-        return response.text("Invalid secret", status=401)
-
     command = request.form["text"][0]
     user_id = request.form["user_id"][0]
     channel_id = request.form["channel_id"][0]
