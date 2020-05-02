@@ -1,4 +1,4 @@
-from typing import List, Text, Union
+from typing import Dict, List, Text, Union
 
 from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
@@ -23,7 +23,7 @@ HELP = (
 SLACK_ACTION_REMOVE_JOB = "REMOVE_JOB"
 
 
-async def format_user_jobs(jobs: List[Job], list_all=False) -> Text:
+async def format_user_jobs(jobs: List[Job], list_all=False) -> Dict:
     """
     Format the list of user jobs to text.
     """
