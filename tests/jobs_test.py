@@ -31,3 +31,4 @@ def test_list_user_jobs():
     scheduler = MagicMock()
     scheduler.get_jobs.return_value = [job1, job2, job3, job4]
     assert jobs.list_user_jobs(scheduler, "T123456", "U78910") == [job1]
+    assert jobs.list_user_jobs(scheduler, "T123456", None) == [job1, job2]

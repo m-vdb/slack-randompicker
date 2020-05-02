@@ -13,6 +13,7 @@ from randompicker.jobs import list_user_jobs, make_job_id
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
     is_list_command,
+    is_list_all_command,
     parse_command,
     parse_frequency,
 )
@@ -71,8 +72,10 @@ async def slashcommand(request):
     logger.info("Incoming command %s", command)
 
     if is_list_command(command):
-        user_jobs = list_user_jobs(scheduler, team_id, user_id)
-        return response.text(format_user_jobs(user_jobs))
+        list_all = is_list_all_command(command)
+        user_jobs = list_user_jobs(scheduler, team_id, None if list_all else user_id)
+        user_jobs_text = await format_user_jobs(user_jobs, list_all)
+        return response.text(user_jobs_text)
 
     params = parse_command(command)
     if params is None:

@@ -16,10 +16,11 @@ HELP = (
     f"*{COMMAND_NAME}* @group to do something on Monday at 9am\n"
     f"*{COMMAND_NAME}* #channel to do something\n"
     f"*{COMMAND_NAME}* list\n"
+    f"*{COMMAND_NAME}* list all\n"
 )
 
 
-async def format_user_jobs(jobs: List[Job]) -> Text:
+async def format_user_jobs(jobs: List[Job], list_all=False) -> Text:
     """
     Format the list of user jobs to text.
     """
@@ -30,7 +31,8 @@ async def format_user_jobs(jobs: List[Job]) -> Text:
             for job in jobs
         ]
     )
-    return f"Here is your list of random picks:\n\n{jobs_as_text}"
+    your = "" if list_all else "your "
+    return f"Here is the list of {your}random picks:\n\n{jobs_as_text}"
 
 
 def format_trigger(trigger: Union[CronTrigger, DateTrigger]) -> Text:

@@ -7,17 +7,31 @@ from recurrent import RecurringEvent
 from randompicker import parser
 
 
-test_list_command = [
+test_list_commands = [
     ("list", True),
+    ("list all", True),
     ("  list  ", True),
     ("  list  stuff", False),
     ("<#C012X7LEUSV|general> to play music", False),
 ]
 
 
-@pytest.mark.parametrize("command,expected", test_list_command)
+@pytest.mark.parametrize("command,expected", test_list_commands)
 def test_is_list_command(command, expected):
     assert parser.is_list_command(command) is expected
+
+
+test_list_all_commands = [
+    ("list", False),
+    ("list all", True),
+    ("  list  ", False),
+    ("  list  stuff", False),
+]
+
+
+@pytest.mark.parametrize("command,expected", test_list_all_commands)
+def test_is_list_all_command(command, expected):
+    assert parser.is_list_all_command(command) is expected
 
 
 test_commands = [
