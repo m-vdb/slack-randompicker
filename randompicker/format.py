@@ -20,19 +20,55 @@ HELP = (
 )
 
 
+SLACK_ACTION_REMOVE_JOB = "REMOVE_JOB"
+
+
 async def format_user_jobs(jobs: List[Job], list_all=False) -> Text:
     """
     Format the list of user jobs to text.
     """
-    jobs_as_text = "\n".join(
-        [
-            f"*{COMMAND_NAME}* {mention_slack_id(job.kwargs['target'])} "
-            f"to {job.kwargs['task']} {format_trigger(job.trigger)}"
-            for job in jobs
-        ]
-    )
+    if not jobs:
+        return {
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "You haven't configured any random picks.",
+                    },
+                },
+            ]
+        }
+
     your = "" if list_all else "your "
-    return f"Here is the list of {your}random picks:\n\n{jobs_as_text}"
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": f"Here is the list of {your}random picks:",
+            },
+        },
+    ]
+    for job in jobs:
+        block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*{COMMAND_NAME}* {mention_slack_id(job.kwargs['target'])} "
+                f"to {job.kwargs['task']} {format_trigger(job.trigger)}",
+            },
+        }
+        if list_all is False:
+            block["accessory"] = {
+                "type": "button",
+                "style": "danger",
+                "text": {"type": "plain_text", "text": "Remove"},
+                "value": job.id,
+                "action_id": SLACK_ACTION_REMOVE_JOB,
+            }
+        blocks.append(block)
+    return {"blocks": blocks}
 
 
 def format_trigger(trigger: Union[CronTrigger, DateTrigger]) -> Text:

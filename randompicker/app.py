@@ -6,9 +6,13 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
 from sanic import Sanic, response
 from sanic.log import logger
-from slack import WebClient
 
-from randompicker.format import HELP, format_slack_message, format_user_jobs
+from randompicker.format import (
+    HELP,
+    SLACK_ACTION_REMOVE_JOB,
+    format_slack_message,
+    format_user_jobs,
+)
 from randompicker.jobs import list_user_jobs, make_job_id
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
@@ -67,8 +71,8 @@ async def slashcommand(request):
     if is_list_command(command):
         list_all = is_list_all_command(command)
         user_jobs = list_user_jobs(scheduler, team_id, None if list_all else user_id)
-        user_jobs_text = await format_user_jobs(user_jobs, list_all)
-        return response.text(user_jobs_text)
+        user_jobs_json = await format_user_jobs(user_jobs, list_all)
+        return response.json(user_jobs_json)
 
     params = parse_command(command)
     if params is None:

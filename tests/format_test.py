@@ -36,19 +36,89 @@ test_jobs = [
 
 @pytest.mark.asyncio
 async def test_format_user_jobs():
-    expected = f"""Here is the list of your random picks:
-
-*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday
-*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM"""
+    expected = {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Here is the list of your random picks:",
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday",
+                },
+                "accessory": {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove"},
+                    "value": "xxx",
+                    "action_id": "REMOVE_JOB",
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM",
+                },
+                "accessory": {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove"},
+                    "value": "yyy",
+                    "action_id": "REMOVE_JOB",
+                },
+            },
+        ]
+    }
     value = await format_.format_user_jobs(test_jobs)
     assert value == expected
 
-    expected_all = f"""Here is the list of random picks:
-
-*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday
-*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM"""
+    expected_all = {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Here is the list of random picks:",
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday",
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM",
+                },
+            },
+        ]
+    }
     value = await format_.format_user_jobs(test_jobs, True)
     assert value == expected_all
+
+    expected_empty = {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "You haven't configured any random picks.",
+                },
+            },
+        ]
+    }
+    value = await format_.format_user_jobs([])
+    assert value == expected_empty
 
 
 test_triggers = [
