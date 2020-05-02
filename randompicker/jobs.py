@@ -19,7 +19,7 @@ def make_job_id(
         if isinstance(frequency, datetime)
         else repr(frequency.get_params())
     )
-    task_id = hashlib.sha1(freq_repr.encode()).hexdigest()
+    task_id = hashlib.sha1(f"{task}{freq_repr}".encode()).hexdigest()
     return f"{team_id}-{user_id}-{task_id}"
 
 

@@ -12,15 +12,25 @@ rec_event.parse("every day at 9am")
 test_frequencies = [
     (
         datetime(2020, 6, 10, 12),
-        "T123456-U78910-545d7adf4cc8a00f42b4f514d03e54b501c7a63d",
+        "play music",
+        "T123456-U78910-ce8a6ba857b415bfe641eac6210e67cfeb5218d6",
     ),
-    (rec_event, "T123456-U78910-0a0ca9f0c52fec59b714ea1a1c7f5f9928d33fd3"),
+    (
+        datetime(2020, 6, 10, 12),
+        "do groceries",
+        "T123456-U78910-7921aad09b2484177d458fad2d3ac8d353bc19e7",
+    ),
+    (
+        rec_event,
+        "play music",
+        "T123456-U78910-91755068743c58e50e5ad00db66fce661d4bdd18",
+    ),
 ]
 
 
-@pytest.mark.parametrize("frequency,expected", test_frequencies)
-def test_make_job_id(frequency, expected):
-    assert jobs.make_job_id("T123456", "U78910", "play music", frequency) == expected
+@pytest.mark.parametrize("frequency,task,expected", test_frequencies)
+def test_make_job_id(frequency, task, expected):
+    assert jobs.make_job_id("T123456", "U78910", task, frequency) == expected
 
 
 def test_list_user_jobs():
