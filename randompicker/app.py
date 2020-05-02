@@ -15,6 +15,7 @@ from randompicker.format import (
     SLACK_ACTION_REMOVE_JOB,
     format_slack_message,
     format_user_jobs,
+    mention_slack_id,
 )
 from randompicker.jobs import list_user_jobs, make_job_id
 from randompicker.parser import (
@@ -104,7 +105,8 @@ async def slashcommand(request):
         team_id=team_id,
     )
     return response.text(
-        f"OK, I will pick someone " f"to {params['task']} {params['frequency']}"
+        f"OK, I will pick someone from {mention_slack_id(params['target'])} "
+        f"to {params['task']} {params['frequency']}"
     )
 
 
