@@ -1,41 +1,32 @@
 from datetime import datetime
 import os
-from pathlib import Path
-import random
-import sys
-from typing import List, Text, Union
+from typing import Text, Union
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
-import requests
 from sanic import Sanic, response
 from sanic.log import logger
 from slack import WebClient
 
-from randompicker.jobs import make_job_id
+from randompicker.format import HELP, format_slack_message, format_user_jobs
+from randompicker.jobs import list_user_jobs, make_job_id
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
+    is_list_command,
     parse_command,
     parse_frequency,
+)
+from randompicker.slack_utils import (
+    slack_client,
+    list_users_target,
+    pick_user_and_send_message,
 )
 
 
 app = Sanic("randompicker")
 
 
-slack_client = WebClient(token=os.environ["SLACK_TOKEN"], run_async=True)
-
-
 scheduler: AsyncIOScheduler = None
-
-
-HELP = (
-    "Example usage:\n\n"
-    "/pickrandom @group to do something\n"
-    "/pickrandom @group to do something every day at 9am\n"
-    "/pickrandom @group to do something on Monday at 9am\n"
-    "/pickrandom #channel to do something\n"
-)
 
 
 @app.listener("before_server_start")
@@ -78,6 +69,11 @@ async def slashcommand(request):
     team_id = request.form["team_id"][0]
 
     logger.info("Incoming command %s", command)
+
+    if is_list_command(command):
+        user_jobs = list_user_jobs(scheduler, team_id, user_id)
+        return response.text(format_user_jobs(user_jobs))
+
     params = parse_command(command)
     if params is None:
         return response.text(HELP)
@@ -107,27 +103,6 @@ async def slashcommand(request):
     return response.text(
         f"OK, I will pick someone " f"to {params['task']} {params['frequency']}"
     )
-
-
-async def list_users_target(target: Text) -> List[Text]:
-    """
-    List users from a channel or usergroup.
-    """
-    if target.startswith("C"):  # channel
-        channel_info = await slack_client.conversations_members(channel=target)
-        return channel_info["members"]
-    elif target.startswith("S"):  # usergroup
-        group_info = await slack_client.usergroups_users_list(usergroup=target)
-        return group_info["users"]
-
-    raise ValueError(f"Unknown type for Slack ID {target}")
-
-
-def format_slack_message(user: Text, task: Text) -> Text:
-    """
-    Format Slack message to send to member.
-    """
-    return f"<@{user}> you have been picked to {task}"
 
 
 def schedule_randompick_for_later(
@@ -163,19 +138,6 @@ def schedule_randompick_for_later(
         replace_existing=True,  # replace job with same id
         **trigger_params,
     )
-
-
-async def pick_user_and_send_message(channel_id: Text, target: Text, task: Text):
-    """
-    This function is scheduled from `schedule_randompick_for_later`.
-    """
-    users = await list_users_target(target)
-    user = random.choice(users)
-    logger.info("Sending message to Slack API")
-    await slack_client.chat_postMessage(
-        channel=channel_id, text=format_slack_message(user, task)
-    )
-    logger.info("Done.")
 
 
 if __name__ == "__main__":

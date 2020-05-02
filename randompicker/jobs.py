@@ -1,7 +1,9 @@
 from datetime import datetime
 import hashlib
+import re
 from typing import Text, Union
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
 
 
@@ -18,3 +20,11 @@ def make_job_id(
     )
     task_id = hashlib.sha1(freq_repr.encode()).hexdigest()
     return f"{team_id}-{user_id}-{task_id}"
+
+
+def list_user_jobs(scheduler: AsyncIOScheduler, team_id: Text, user_id: Text):
+    """
+    Return all the user jobs, matching team_id and user_id.
+    """
+    id_re = re.compile(rf"^{team_id}\-{user_id}\-[a-f0-9]{{40}}$")
+    return [job for job in scheduler.get_jobs() if id_re.match(job.id)]

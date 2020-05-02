@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from typing import Optional, Text, Union
+from typing import Dict, Optional, Text, Union
 
 import dateparser
 from dateutil.rrule import rrulestr
@@ -8,6 +8,7 @@ from recurrent import RecurringEvent
 
 
 HELP_RE = re.compile(r"^help.*$")
+LIST_RE = re.compile(r"^\s*list\s*$")
 
 
 FREQUENCY_PATTERN = r"(on|every|next|today|tomorrow) (.+)"
@@ -25,7 +26,14 @@ COMMAND_RE = re.compile(
 )
 
 
-def parse_command(command: str) -> Optional[dict]:
+def is_list_command(command: Text) -> bool:
+    """
+    Return True if the command is the list command.
+    """
+    return bool(LIST_RE.match(command))
+
+
+def parse_command(command: Text) -> Optional[Dict]:
     """
     Parse the slash command and returns a dict containing the following keys:
     - target: the group or channel
