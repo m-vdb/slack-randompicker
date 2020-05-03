@@ -80,6 +80,9 @@ jobs:
     needs: [test, quality]
 
     steps:
+    - name: Checkout git repository
+      uses: actions/checkout@v2
+
     - name: Build docker image
       uses: docker/build-push-action@v1
       with:
