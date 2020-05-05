@@ -26,6 +26,7 @@ pytest-cov = "^2.8.1"
 black = "^19.10b0"
 mypy = "^0.770"
 coveralls = "^2.0.0"
+pytest-sanic = "^1.6.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
