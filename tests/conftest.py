@@ -5,6 +5,9 @@ os.environ.setdefault("SLACK_SIGNING_SECRET", "1b5d1a00001001010be0a59fce1b8977"
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 
 from asyncio import Future
+import hashlib
+import hmac
+import urllib.parse
 
 import pytest
 
@@ -43,3 +46,29 @@ def mock_slack_api(mocker):
         slack_utils.slack_client, "chat_postMessage", return_value=chat_postmessage,
     )
     return slack_utils.slack_client
+
+
+@pytest.fixture
+def api_signature():
+    def inner_api_signature(data):
+        fake_timestamp = "1588706373"
+        format_req = str.encode(f"v0:{fake_timestamp}:{data}")
+        encoded_secret = str.encode(os.environ["SLACK_SIGNING_SECRET"])
+        request_hash = hmac.new(encoded_secret, format_req, hashlib.sha256).hexdigest()
+        return {
+            "X-Slack-Request-Timestamp": fake_timestamp,
+            "X-Slack-Signature": f"v0={request_hash}",
+        }
+
+    return inner_api_signature
+
+
+@pytest.fixture
+def api_post(test_cli, api_signature):
+    async def inner_api_post_with_signature(url, data):
+        resp = await test_cli.post(
+            url, data=data, headers=api_signature(urllib.parse.urlencode(data))
+        )
+        return resp
+
+    return inner_api_post_with_signature

@@ -50,8 +50,8 @@ def requires_slack_signature(func):
         if not WebClient.validate_slack_signature(
             signing_secret=os.environ["SLACK_SIGNING_SECRET"],
             data=request.body.decode("utf-8"),
-            timestamp=request.headers["X-Slack-Request-Timestamp"],
-            signature=request.headers["X-Slack-Signature"],
+            timestamp=request.headers.get("X-Slack-Request-Timestamp", ""),
+            signature=request.headers.get("X-Slack-Signature", ""),
         ):
             return response.text("Invalid secret", status=401)
 
