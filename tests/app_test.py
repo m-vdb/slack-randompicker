@@ -147,7 +147,7 @@ async def test_POST_slashcommand_pickrandom_on_specific_date(api_post, mock_slac
     body = await resp.read()
     assert body.decode() == (
         f"OK, I will pick someone from <#C012X7LEUSV> "
-        f"to play music on Monday May 4 at 12:00 AM"
+        f"to play music on Monday May 4 at 09:00 AM"
     )
     scheduled_jobs = randompicker_app.scheduler.get_jobs()
     assert len(scheduled_jobs) == 1
@@ -158,7 +158,7 @@ async def test_POST_slashcommand_pickrandom_on_specific_date(api_post, mock_slac
         "task": "play music",
     }
     assert str(scheduled_job.trigger) == str(
-        DateTrigger(run_date=datetime(2020, 5, 4, 0, 0, 0), timezone="Europe/Berlin")
+        DateTrigger(run_date=datetime(2020, 5, 4, 9, 0, 0), timezone="Europe/Berlin")
     )
 
 
@@ -255,11 +255,11 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                     "style": "danger",
                     "text": {"text": "Remove", "type": "plain_text"},
                     "type": "button",
-                    "value": "T0007-U1337-01cce10394d4b40c4a085bb506e0679c4eff8fac",
+                    "value": "T0007-U1337-22cc24968180ada6cdad2ba5e17fe623c22523e0",
                 },
                 "text": {
                     "text": "*/pickrandom* <#C012X7LEUSV> to play music on "
-                    "Tuesday May 5 at 12:00 AM",
+                    "Tuesday May 5 at 09:00 AM",
                     "type": "mrkdwn",
                 },
                 "type": "section",

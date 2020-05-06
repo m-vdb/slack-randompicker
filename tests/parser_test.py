@@ -100,8 +100,8 @@ def test_parse_frequency(frequency, expected):
 test_specific_dates = [
     ("tomorrow at 9am", datetime(2020, 4, 29, 9, 0)),
     ("today at 10am", datetime(2020, 4, 28, 10, 0)),
-    ("on Friday", datetime(2020, 5, 1, 0, 0)),
-    ("on Monday May 4th at 9am", datetime(2020, 5, 4, 9, 0)),
+    ("on Friday", datetime(2020, 5, 1, 9, 0)),
+    ("on Monday May 4th at 10am", datetime(2020, 5, 4, 10, 0)),
 ]
 
 

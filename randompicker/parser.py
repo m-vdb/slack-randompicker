@@ -74,7 +74,11 @@ def parse_frequency(frequency: Text) -> Optional[Union[datetime, RecurringEvent]
                 rec.byminute.append("0")
             return rec
     else:
-        return dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
+        value = dateparser.parse(frequency, settings={"PREFER_DATES_FROM": "future"})
+        if value and not value.hour and not value.minute:
+            # default 9am if no times
+            value = value.replace(hour=9)
+        return value
 
 
 def convert_recurring_event_to_trigger_format(event: RecurringEvent):
