@@ -77,12 +77,18 @@ def format_trigger(trigger: Union[CronTrigger, DateTrigger]) -> Text:
     """
     if isinstance(trigger, CronTrigger):
         trigger_fields = {field.name: field for field in trigger.fields}
-        return remove_first_cap(
+        description = remove_first_cap(
             cron_descriptor.get_description(
                 f"{trigger_fields['minute']} {trigger_fields['hour']} {trigger_fields['day']} "
                 f"{trigger_fields['month']} {trigger_fields['day_of_week']}"
             ).replace("only on", "every")
         )
+        if (
+            str(trigger_fields["day"]) == "*"
+            and str(trigger_fields["day_of_week"]) == "*"
+        ):
+            description = f"{description}, every day"
+        return description
 
     return trigger.run_date.strftime("on %A %B %-d at %I:%M %p")
 

@@ -123,6 +123,7 @@ async def test_format_user_jobs():
 
 test_triggers = [
     # crons
+    (CronTrigger(hour="9", minute="0"), "at 09:00 AM, every day",),
     (
         CronTrigger(day_of_week="mon", hour="9", minute="0", week="*"),
         "at 09:00 AM, every Monday",
