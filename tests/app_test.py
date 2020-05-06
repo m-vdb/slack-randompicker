@@ -1,12 +1,14 @@
 from datetime import datetime
+import json
 from unittest.mock import call
 
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 import pytest
+import requests
 
 from randompicker import app as randompicker_app
-from randompicker.format import HELP
+from randompicker.format import HELP, SLACK_ACTION_REMOVE_JOB
 
 
 async def test_index(test_cli):
@@ -339,3 +341,95 @@ async def test_POST_slashcommand_list_all(api_post, mock_slack_api):
             },
         ],
     }
+
+
+async def test_GET_actions(test_cli):
+    resp = await test_cli.get("/actions")
+    assert resp.status == 405
+
+
+async def test_POST_actions_require_secret(test_cli):
+    resp = await test_cli.post("/actions", data={"payload": "{}",},)
+    assert resp.status == 401
+
+
+async def test_POST_actions_unknown_job(api_post, mocker):
+    mocker.patch.object(requests, "post")
+
+    resp = await api_post(
+        "/actions",
+        data={
+            "payload": json.dumps(
+                {
+                    "team": {"id": "T0007"},
+                    "user": {"id": "U1337"},
+                    "response_url": "http://resp.url",
+                    "actions": [
+                        {"action_id": "other", "value": "xxx"},
+                        {"action_id": SLACK_ACTION_REMOVE_JOB, "value": "???"},
+                    ],
+                }
+            ),
+        },
+    )
+    assert resp.status == 200
+    assert resp.content_type == "text/plain"
+    body = await resp.read()
+    assert body.decode() == "OK"
+    requests.post.assert_not_called()
+
+
+async def test_POST_actions_removed_job(api_post, mocker, mock_slack_api):
+    mocker.patch.object(requests, "post")
+    # create 1 pick
+    resp = await api_post(
+        "/slashcommand",
+        data={
+            "text": "<#C012X7LEUSV|general> to play music every day",
+            "user_id": "U1337",
+            "channel_id": "C1234",
+            "team_id": "T0007",
+        },
+    )
+    assert resp.status == 200
+    scheduled_jobs = randompicker_app.scheduler.get_jobs()
+    assert len(scheduled_jobs) == 1
+    scheduled_job = scheduled_jobs[0]
+
+    resp = await api_post(
+        "/actions",
+        data={
+            "payload": json.dumps(
+                {
+                    "team": {"id": "T0007"},
+                    "user": {"id": "U1337"},
+                    "response_url": "http://resp.url",
+                    "actions": [
+                        {
+                            "action_id": SLACK_ACTION_REMOVE_JOB,
+                            "value": scheduled_job.id,
+                        },
+                    ],
+                }
+            ),
+        },
+    )
+    assert resp.status == 200
+    assert resp.content_type == "text/plain"
+    body = await resp.read()
+    assert body.decode() == "OK"
+    assert len(randompicker_app.scheduler.get_jobs()) == 0
+    requests.post.assert_called_with(
+        "http://resp.url",
+        json={
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "You haven't configured any random picks.",
+                    },
+                }
+            ]
+        },
+    )
