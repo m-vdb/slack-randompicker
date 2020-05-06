@@ -45,6 +45,11 @@ def mock_slack_api(mocker):
     mocker.patch.object(
         slack_utils.slack_client, "chat_postMessage", return_value=chat_postmessage,
     )
+    users_info = Future()
+    users_info.set_result({"tz": "Europe/Berlin"})
+    mocker.patch.object(
+        slack_utils.slack_client, "users_info", return_value=users_info,
+    )
     return slack_utils.slack_client
 
 
@@ -71,4 +76,5 @@ def api_post(test_cli, api_signature):
         )
         return resp
 
-    return inner_api_post_with_signature
+    yield inner_api_post_with_signature
+    randompicker_app.scheduler.remove_all_jobs()
