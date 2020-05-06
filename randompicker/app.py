@@ -16,6 +16,7 @@ from randompicker.format import (
     format_slack_message,
     format_user_jobs,
     mention_slack_id,
+    format_trigger,
 )
 from randompicker.jobs import list_user_jobs, make_job_id
 from randompicker.parser import (
@@ -95,7 +96,7 @@ async def slashcommand(request):
     # get user timezone
     user_info = await slack_client.users_info(user=user_id)
     user_tz = user_info["tz"]
-    schedule_randompick_for_later(
+    job = schedule_randompick_for_later(
         frequency=frequency,
         user_tz=user_tz,
         target=params["target"],
@@ -106,7 +107,7 @@ async def slashcommand(request):
     )
     return response.text(
         f"OK, I will pick someone from {mention_slack_id(params['target'])} "
-        f"to {params['task']} {params['frequency']}"
+        f"to {params['task']} {format_trigger(job.trigger)}"
     )
 
 
@@ -166,7 +167,7 @@ def schedule_randompick_for_later(
         }
         trigger_params.update(convert_recurring_event_to_trigger_format(frequency))
 
-    scheduler.add_job(
+    return scheduler.add_job(
         pick_user_and_send_message,
         kwargs={"channel_id": channel_id, "target": target, "task": task},
         id=make_job_id(team_id, user_id, task, frequency),
