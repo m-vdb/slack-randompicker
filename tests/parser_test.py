@@ -115,6 +115,7 @@ test_bad_frequencies = [
     "every BOOM",
     "on any day in the future",
     "on my birthday",
+    "every 4th of the month",
 ]
 
 
