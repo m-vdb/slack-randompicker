@@ -56,6 +56,10 @@ test_commands = [
         "<#C012X7LEUSV|general> to play music next monday",
         {"target": "C012X7LEUSV", "task": "play music", "frequency": "next monday"},
     ),
+    (
+        "<!subteam^S013R9HGXJ5|test-group> to play music",
+        {"target": "S013R9HGXJ5", "task": "play music", "frequency": None},
+    ),
 ]
 
 

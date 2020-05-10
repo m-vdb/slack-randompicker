@@ -21,7 +21,7 @@ FREQUENCY_PATTERN = r"(on|every|next|today|tomorrow) (.+)"
 # /pickrandom @group to do something on Monday at 9am
 # /pickrandom @group to do something next Monday at 9am
 COMMAND_RE = re.compile(
-    fr"^<[@#](?P<target>[A-Z0-9]+)(?:|[^>]+)?>\s+"  # group or channel id
+    fr"^<(?:#|!subteam\^)(?P<target>[A-Z0-9]+)(?:|[^>]+)?>\s+"  # group or channel id
     fr"to (?P<task>.+?)\s*"  # task to do
     fr"(?P<frequency>{FREQUENCY_PATTERN})?$"  # optional date or frequency
 )

@@ -85,6 +85,29 @@ async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
         call(channel="C1234", text="<@U2> you have been picked to play music"),
         call(channel="C1234", text="<@U1> you have been picked to play music"),
     ]
+    mock_slack_api.conversations_members.assert_called_with(channel="C1234")
+
+
+async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
+    resp = await api_post(
+        "/slashcommand",
+        data={
+            "text": "<!subteam^S013R9HGXJ5|test-group> to play music",
+            "user_id": "U1337",
+            "channel_id": "C1234",
+            "team_id": "T0007",
+        },
+    )
+    assert resp.status == 200
+    assert resp.content_type == "text/plain"
+    body = await resp.read()
+    assert body.decode() == ""
+    mock_slack_api.chat_postMessage.assert_called()
+    assert mock_slack_api.chat_postMessage.mock_calls[0] in [
+        call(channel="C1234", text="<@U3> you have been picked to play music"),
+        call(channel="C1234", text="<@U4> you have been picked to play music"),
+    ]
+    mock_slack_api.usergroups_users_list.assert_called_with(usergroup="S013R9HGXJ5")
 
 
 async def test_POST_slashcommand_pickrandom_wrong_frequency(api_post, mock_slack_api):
