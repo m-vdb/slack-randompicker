@@ -13,24 +13,33 @@ test_frequencies = [
     (
         datetime(2020, 6, 10, 12),
         "play music",
-        "T123456-U78910-ce8a6ba857b415bfe641eac6210e67cfeb5218d6",
+        "C1234",
+        "T123456-U78910-b94bccc628b9d0cb233ce293f5c657df3f5f62f0",
+    ),
+    (
+        datetime(2020, 6, 10, 12),
+        "play music",
+        "S5678",
+        "T123456-U78910-6791a246535100ef9b437490f139cb377a50d795",
     ),
     (
         datetime(2020, 6, 10, 12),
         "do groceries",
-        "T123456-U78910-7921aad09b2484177d458fad2d3ac8d353bc19e7",
+        "C1234",
+        "T123456-U78910-7a51ce02398b6db791b944d10c366ca8089bf79e",
     ),
     (
         rec_event,
         "play music",
-        "T123456-U78910-91755068743c58e50e5ad00db66fce661d4bdd18",
+        "C1234",
+        "T123456-U78910-ab9b7ccab76fe57d326cc0c2afb46af1316844f7",
     ),
 ]
 
 
-@pytest.mark.parametrize("frequency,task,expected", test_frequencies)
-def test_make_job_id(frequency, task, expected):
-    assert jobs.make_job_id("T123456", "U78910", task, frequency) == expected
+@pytest.mark.parametrize("frequency,task,target,expected", test_frequencies)
+def test_make_job_id(frequency, task, target, expected):
+    assert jobs.make_job_id("T123456", "U78910", task, target, frequency) == expected
 
 
 def test_list_user_jobs():

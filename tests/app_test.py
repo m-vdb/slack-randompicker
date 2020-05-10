@@ -265,7 +265,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                     "style": "danger",
                     "text": {"text": "Remove", "type": "plain_text"},
                     "type": "button",
-                    "value": "T0007-U1337-91755068743c58e50e5ad00db66fce661d4bdd18",
+                    "value": "T0007-U1337-d20842f2b7ffade8e0569d88fba8df0fe0f8062b",
                 },
                 "text": {
                     "text": "*/pickrandom* <#C012X7LEUSV> to play music at "
@@ -280,7 +280,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                     "style": "danger",
                     "text": {"text": "Remove", "type": "plain_text"},
                     "type": "button",
-                    "value": "T0007-U1337-22cc24968180ada6cdad2ba5e17fe623c22523e0",
+                    "value": "T0007-U1337-e816ff3468f71fc079211addf9247d41c57a9fe7",
                 },
                 "text": {
                     "text": "*/pickrandom* <#C012X7LEUSV> to play music on "
