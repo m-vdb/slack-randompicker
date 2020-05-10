@@ -12,15 +12,15 @@ To show the help, you can type `/pickrandom help` in Slack:
 
 Here is the output of an instantaneous random pick, using `/pickrandom #general to play music`:
 
-![Instantaneous random pick](./docs/2_pick_now.png)
+<img src="./docs/2_pick_now.png" alt="Instantaneous random pick" width="50%" />
 
 And an example of a periodic random pick, using `/pickrandom #general to prepare slides every Monday at 10am`:
 
-![Periodic random pick](./docs/3_pick_later.png)
+<img src="./docs/3_pick_later.png" alt="Periodic random pick" width="78%" />
 
 To dispay all the current scheduled random picks, you can do `/pickrandom list`:
 
-![List of random picks](./docs/4_pick_list.png)
+<img src="./docs/4_pick_list.png" alt="List of random picks" width="85%" />
 
 ## Server installation
 
