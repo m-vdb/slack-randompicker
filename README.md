@@ -4,8 +4,25 @@
 # slack-randompicker
 Pick a random person from a group or channel in Slack
 
+## Usage
 
-## Installation
+To show the help, you can type `/pickrandom help` in Slack:
+
+![Help](./docs/1_help.png)
+
+Here is the output of an instantaneous random pick, using `/pickrandom #general to play music`:
+
+![Instantaneous random pick](./docs/2_pick_now.png)
+
+And an example of a periodic random pick, using `/pickrandom #general to prepare slides every Monday at 10am`:
+
+![Periodic random pick](./docs/3_pick_later.png)
+
+To dispay all the current scheduled random picks, you can do `/pickrandom list`:
+
+![List of random picks](./docs/4_pick_list.png)
+
+## Server installation
 
 After creatinga Slack bot, you can install `slack-randompicker` using `docker` on your own server. Required
 environment variables are documented in the `Dockerfile`.
