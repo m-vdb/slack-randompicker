@@ -85,10 +85,10 @@ async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
         call(channel="C1234", text="<@U2> you have been picked to play music"),
         call(channel="C1234", text="<@U1> you have been picked to play music"),
     ]
-    mock_slack_api.conversations_members.assert_called_with(channel="C1234")
+    mock_slack_api.conversations_members.assert_called_with(channel="C012X7LEUSV")
 
 
-async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
+async def test_POST_slashcommand_pickrandom_now_group(api_post, mock_slack_api):
     resp = await api_post(
         "/slashcommand",
         data={
