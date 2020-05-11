@@ -7,7 +7,7 @@ WORKDIR /app
 RUN pip install poetry
 RUN poetry install --no-dev
 
-EXPOSE 8000
+EXPOSE 80
 ENV PYTHONPATH "/app/"
 
 # DATABASE_URL, SLACK_TOKEN, SLACK_SIGNING_SECRET env variables are required
