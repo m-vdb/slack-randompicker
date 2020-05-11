@@ -24,8 +24,14 @@ To dispay all the current scheduled random picks, you can do `/pickrandom list`:
 
 ## Server installation
 
-After creatinga Slack bot, you can install `slack-randompicker` using `docker` on your own server. Required
-environment variables are documented in the `Dockerfile`.
+After creatinga Slack bot, you can install `slack-randompicker` using `docker` on your own server:
+
+```bash
+$ export DATABASE_URL=...
+$ export SLACK_TOKEN=...
+$ export SLACK_SIGNING_SECRET=...
+$ docker run -e DATABASE_URL -e SLACK_TOKEN -e SLACK_SIGNING_SECRET -p 8000:8000 mvdb/slack-randompicker:0.2.0
+```
 
 ## Slack app setup
 
