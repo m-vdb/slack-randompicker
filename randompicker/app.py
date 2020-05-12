@@ -14,15 +14,14 @@ from randompicker.format import (
     HELP,
     SLACK_ACTION_REMOVE_JOB,
     format_slack_message,
-    format_user_jobs,
+    format_scheduled_jobs,
     mention_slack_id,
     format_trigger,
 )
-from randompicker.jobs import list_user_jobs, make_job_id
+from randompicker.jobs import list_scheduled_jobs, make_job_id
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
     is_list_command,
-    is_list_all_command,
     parse_command,
     parse_frequency,
 )
@@ -74,10 +73,9 @@ async def slashcommand(request):
     logger.info("Incoming command %s", command)
 
     if is_list_command(command):
-        list_all = is_list_all_command(command)
-        user_jobs = list_user_jobs(scheduler, team_id, None if list_all else user_id)
-        user_jobs_json = await format_user_jobs(user_jobs, list_all)
-        return response.json(user_jobs_json)
+        jobs = list_scheduled_jobs(scheduler, team_id)
+        jobs_json = await format_scheduled_jobs(channel_id, jobs)
+        return response.json(jobs_json)
 
     params = parse_command(command)
     if params is None:
@@ -120,6 +118,7 @@ async def actions(request):
     payload = json.loads(request.form["payload"][0])
     team_id = payload["team"]["id"]
     user_id = payload["user"]["id"]
+    channel_id = payload["channel"]["id"]
     response_url = payload["response_url"]
 
     for action in payload["actions"]:
@@ -132,9 +131,9 @@ async def actions(request):
                 logger.error(f"Cannot find scheduled job with id {job_id}")
             else:
                 # update the message the user sees
-                user_jobs = list_user_jobs(scheduler, team_id, user_id)
-                user_jobs_json = await format_user_jobs(user_jobs)
-                resp = requests.post(response_url, json=user_jobs_json)
+                jobs = list_scheduled_jobs(scheduler, team_id)
+                jobs_json = await format_scheduled_jobs(channel_id, jobs)
+                resp = requests.post(response_url, json=jobs_json)
                 resp.raise_for_status()
             break
 

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Dict, List, Text, Union
 
 from apscheduler.job import Job
@@ -16,14 +17,16 @@ HELP = (
     f"*{COMMAND_NAME}* @group to do something on Monday at 9am\n"
     f"*{COMMAND_NAME}* #channel to do something\n"
     f"*{COMMAND_NAME}* list\n"
-    f"*{COMMAND_NAME}* list all\n"
 )
 
 
 SLACK_ACTION_REMOVE_JOB = "REMOVE_JOB"
+KEY_THIS_CHANNEL = "In this channel"
+KEY_OTHER_CHANNEL = "Other channels"
+KEY_USER_GROUPS = "User groups"
 
 
-async def format_user_jobs(jobs: List[Job], list_all=False) -> Dict:
+async def format_scheduled_jobs(channel: Text, jobs: List[Job]) -> Dict:
     """
     Format the list of user jobs to text.
     """
@@ -40,35 +43,67 @@ async def format_user_jobs(jobs: List[Job], list_all=False) -> Dict:
             ]
         }
 
-    your = "" if list_all else "your "
-    blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "plain_text",
-                "text": f"Here is the list of {your}random picks:",
-            },
-        },
-    ]
-    for job in jobs:
-        block = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"*{COMMAND_NAME}* {mention_slack_id(job.kwargs['target'])} "
-                f"to {job.kwargs['task']} {format_trigger(job.trigger)}",
-            },
-        }
-        if list_all is False:
-            block["accessory"] = {
-                "type": "button",
-                "style": "danger",
-                "text": {"type": "plain_text", "text": "Remove"},
-                "value": job.id,
-                "action_id": SLACK_ACTION_REMOVE_JOB,
-            }
-        blocks.append(block)
+    jobs_by_category = split_jobs_by_category(channel, jobs)
+    blocks = []
+    for category, job_list in jobs_by_category.items():
+        if not job_list:
+            continue
+
+        blocks.append(
+            {"type": "section", "text": {"type": "mrkdwn", "text": category,},},
+        )
+        blocks.append({"type": "section", "text": {"type": "plain_text", "text": ""},},)
+        for job in job_list:
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*{COMMAND_NAME}* {mention_slack_id(job.kwargs['target'])} "
+                        f"to {job.kwargs['task']} {format_trigger(job.trigger)}",
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "style": "danger",
+                        "text": {"type": "plain_text", "text": "Remove"},
+                        "value": job.id,
+                        "action_id": SLACK_ACTION_REMOVE_JOB,
+                    },
+                }
+            )
+
     return {"blocks": blocks}
+
+
+def split_jobs_by_category(channel: Text, jobs: List[Job]) -> Dict[Text, List[Job]]:
+    """
+    Split jobs in 3 categories:
+        In this channel:
+        ....
+
+        Other channels:
+        ....
+
+        User groups:
+        ....
+    """
+    output: OrderedDict = OrderedDict(
+        [(KEY_THIS_CHANNEL, []), (KEY_OTHER_CHANNEL, []), (KEY_USER_GROUPS, []),]
+    )
+    # split in categories
+    for job in jobs:
+        if job.kwargs["target"] == channel:
+            output[KEY_THIS_CHANNEL].append(job)
+        elif job.kwargs["target"].startswith("C"):
+            output[KEY_OTHER_CHANNEL].append(job)
+        elif job.kwargs["target"].startswith("S"):
+            output[KEY_USER_GROUPS].append(job)
+
+    # sort each category
+    for key in output:
+        output[key] = sorted(output[key], key=lambda job: job.kwargs["target"])
+
+    return output
 
 
 def format_trigger(trigger: Union[CronTrigger, DateTrigger]) -> Text:

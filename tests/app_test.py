@@ -252,13 +252,8 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
     body = await resp.json()
     assert body == {
         "blocks": [
-            {
-                "text": {
-                    "text": "Here is the list of your random picks:",
-                    "type": "plain_text",
-                },
-                "type": "section",
-            },
+            {"text": {"text": "Other channels", "type": "mrkdwn"}, "type": "section"},
+            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
             {
                 "accessory": {
                     "action_id": "REMOVE_JOB",
@@ -293,79 +288,6 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
     }
 
 
-@pytest.mark.freeze_time("2020-04-28 8:20")
-async def test_POST_slashcommand_list_all(api_post, mock_slack_api):
-    # create 1 random picks from different user
-    resp = await api_post(
-        "/slashcommand",
-        data={
-            "text": "<#C012X7LEUSV|general> to play guitar every day",
-            "user_id": "U42",
-            "channel_id": "C1234",
-            "team_id": "T0007",
-        },
-    )
-    assert resp.status == 200
-
-    # no picks for the user
-    resp = await api_post(
-        "/slashcommand",
-        data={
-            "text": "list",
-            "user_id": "U1337",
-            "channel_id": "C1234",
-            "team_id": "T0007",
-        },
-    )
-    assert resp.status == 200
-    assert resp.content_type == "application/json"
-    body = await resp.json()
-    assert body == {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "You haven't configured any random picks.",
-                },
-            }
-        ]
-    }
-
-    # list all command
-    resp = await api_post(
-        "/slashcommand",
-        data={
-            "text": "list all",
-            "user_id": "U1337",
-            "channel_id": "C1234",
-            "team_id": "T0007",
-        },
-    )
-    assert resp.status == 200
-    assert resp.content_type == "application/json"
-    body = await resp.json()
-    assert body == {
-        "blocks": [
-            {
-                "text": {
-                    "text": "Here is the list of random picks:",
-                    "type": "plain_text",
-                },
-                "type": "section",
-            },
-            {
-                "text": {
-                    "text": "*/pickrandom* <#C012X7LEUSV> to play guitar at "
-                    "09:00 AM, every day",
-                    "type": "mrkdwn",
-                },
-                "type": "section",
-            },
-        ],
-    }
-
-
 async def test_GET_actions(test_cli):
     resp = await test_cli.get("/actions")
     assert resp.status == 405
@@ -386,6 +308,7 @@ async def test_POST_actions_unknown_job(api_post, mocker):
                 {
                     "team": {"id": "T0007"},
                     "user": {"id": "U1337"},
+                    "channel": {"id": "C42"},
                     "response_url": "http://resp.url",
                     "actions": [
                         {"action_id": "other", "value": "xxx"},
@@ -426,6 +349,7 @@ async def test_POST_actions_removed_job(api_post, mocker, mock_slack_api):
                 {
                     "team": {"id": "T0007"},
                     "user": {"id": "U1337"},
+                    "channel": {"id": "C42"},
                     "response_url": "http://resp.url",
                     "actions": [
                         {

@@ -42,12 +42,11 @@ def test_make_job_id(frequency, task, target, expected):
     assert jobs.make_job_id("T123456", "U78910", task, target, frequency) == expected
 
 
-def test_list_user_jobs():
+def test_list_scheduled_jobs():
     job1 = Mock(id="T123456-U78910-0a0ca9f0c52fec59b714ea1a1c7f5f9928d33fd3")
     job2 = Mock(id="T123456-U78911-0a0ca9f0c52fec59b714ea1a1c7f5f9928d33fd3")
     job3 = Mock(id="T123457-U78910-0a0ca9f0c52fec59b714ea1a1c7f5f9928d33fd3")
     job4 = Mock(id="T123456-U78910-broken")
     scheduler = MagicMock()
     scheduler.get_jobs.return_value = [job1, job2, job3, job4]
-    assert jobs.list_user_jobs(scheduler, "T123456", "U78910") == [job1]
-    assert jobs.list_user_jobs(scheduler, "T123456", None) == [job1, job2]
+    assert jobs.list_scheduled_jobs(scheduler, "T123456") == [job1, job2]

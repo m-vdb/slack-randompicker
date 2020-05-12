@@ -8,8 +8,7 @@ from recurrent import RecurringEvent
 
 
 HELP_RE = re.compile(r"^help.*$")
-LIST_RE = re.compile(r"^\s*list\s*(all)?\s*$")
-LIST_ALL_RE = re.compile(r"^\s*list\s*all\s*$")
+LIST_RE = re.compile(r"^\s*list\s*$")
 
 
 FREQUENCY_PATTERN = r"(on|every|next|today|tomorrow) (.+)"
@@ -32,13 +31,6 @@ def is_list_command(command: Text) -> bool:
     Return True if the command is the list command.
     """
     return bool(LIST_RE.match(command))
-
-
-def is_list_all_command(command: Text) -> bool:
-    """
-    Return True if the command is the list command.
-    """
-    return bool(LIST_ALL_RE.match(command))
 
 
 def parse_command(command: Text) -> Optional[Dict]:

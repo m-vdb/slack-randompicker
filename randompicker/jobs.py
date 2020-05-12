@@ -27,12 +27,9 @@ def make_job_id(
     return f"{team_id}-{user_id}-{task_id}"
 
 
-def list_user_jobs(
-    scheduler: AsyncIOScheduler, team_id: Text, user_id: Optional[Text]
-) -> List[Job]:
+def list_scheduled_jobs(scheduler: AsyncIOScheduler, team_id: Text) -> List[Job]:
     """
-    Return all the user jobs, matching team_id and user_id.
+    Return all the jobs matching team_id.
     """
-    user_id = user_id or r"U[A-Z0-9]+"
-    id_re = re.compile(rf"^{team_id}\-{user_id}\-[a-f0-9]{{40}}$")
+    id_re = re.compile(rf"^{team_id}\-U[A-Z0-9]+\-[a-f0-9]{{40}}$")
     return [job for job in scheduler.get_jobs() if id_re.match(job.id)]

@@ -31,80 +31,99 @@ test_jobs = [
         kwargs={"target": "S1234", "task": "do groceries"},
         trigger=DateTrigger(run_date=datetime(2020, 5, 4, 18, 0)),
     ),
+    Job(
+        id="zzz",
+        scheduler=test_scheduler,
+        func=dummy_func,
+        args=(),
+        kwargs={"target": "C6789", "task": "play guitar"},
+        trigger=CronTrigger(day_of_week="tue", hour="9", minute="0", week="*"),
+    ),
+    Job(
+        id="www",
+        scheduler=test_scheduler,
+        func=dummy_func,
+        args=(),
+        kwargs={"target": "C6789", "task": "play violin"},
+        trigger=CronTrigger(day_of_week="wed", hour="9", minute="0", week="*"),
+    ),
 ]
 
 
 @pytest.mark.asyncio
-async def test_format_user_jobs():
+async def test_format_scheduled_jobs():
     expected = {
         "blocks": [
+            {"text": {"text": "In this channel", "type": "mrkdwn"}, "type": "section"},
+            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
             {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Here is the list of your random picks:",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday",
-                },
                 "accessory": {
-                    "type": "button",
+                    "action_id": "REMOVE_JOB",
                     "style": "danger",
-                    "text": {"type": "plain_text", "text": "Remove"},
+                    "text": {"text": "Remove", "type": "plain_text"},
+                    "type": "button",
                     "value": "xxx",
-                    "action_id": "REMOVE_JOB",
                 },
-            },
-            {
-                "type": "section",
                 "text": {
+                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 "
+                    "AM, every Monday",
                     "type": "mrkdwn",
-                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM",
                 },
+                "type": "section",
+            },
+            {"text": {"text": "Other channels", "type": "mrkdwn"}, "type": "section"},
+            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {
                 "accessory": {
-                    "type": "button",
-                    "style": "danger",
-                    "text": {"type": "plain_text", "text": "Remove"},
-                    "value": "yyy",
                     "action_id": "REMOVE_JOB",
+                    "style": "danger",
+                    "text": {"text": "Remove", "type": "plain_text"},
+                    "type": "button",
+                    "value": "zzz",
                 },
+                "text": {
+                    "text": f"*{format_.COMMAND_NAME}* <#C6789> to play guitar at 09:00 "
+                    "AM, every Tuesday",
+                    "type": "mrkdwn",
+                },
+                "type": "section",
             },
-        ]
+            {
+                "accessory": {
+                    "action_id": "REMOVE_JOB",
+                    "style": "danger",
+                    "text": {"text": "Remove", "type": "plain_text"},
+                    "type": "button",
+                    "value": "www",
+                },
+                "text": {
+                    "text": f"*{format_.COMMAND_NAME}* <#C6789> to play violin at 09:00 "
+                    "AM, every Wednesday",
+                    "type": "mrkdwn",
+                },
+                "type": "section",
+            },
+            {"text": {"text": "User groups", "type": "mrkdwn"}, "type": "section"},
+            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {
+                "accessory": {
+                    "action_id": "REMOVE_JOB",
+                    "style": "danger",
+                    "text": {"text": "Remove", "type": "plain_text"},
+                    "type": "button",
+                    "value": "yyy",
+                },
+                "text": {
+                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries "
+                    "on Monday May 4 at 06:00 PM",
+                    "type": "mrkdwn",
+                },
+                "type": "section",
+            },
+        ],
     }
-    value = await format_.format_user_jobs(test_jobs)
+    value = await format_.format_scheduled_jobs("C1234", test_jobs)
     assert value == expected
-
-    expected_all = {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Here is the list of random picks:",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 AM, every Monday",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries on Monday May 4 at 06:00 PM",
-                },
-            },
-        ]
-    }
-    value = await format_.format_user_jobs(test_jobs, True)
-    assert value == expected_all
 
     expected_empty = {
         "blocks": [
@@ -117,7 +136,7 @@ async def test_format_user_jobs():
             },
         ]
     }
-    value = await format_.format_user_jobs([])
+    value = await format_.format_scheduled_jobs("C1234", [])
     assert value == expected_empty
 
 
