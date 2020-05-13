@@ -37,7 +37,7 @@ test_jobs = [
         func=dummy_func,
         args=(),
         kwargs={"target": "C6789", "task": "play guitar"},
-        trigger=CronTrigger(day_of_week="tue", hour="9", minute="0", week="*"),
+        trigger=CronTrigger(day_of_week="tue", hour="9", minute="0", week="*/2"),
     ),
     Job(
         id="www",
@@ -83,7 +83,7 @@ async def test_format_scheduled_jobs():
                 },
                 "text": {
                     "text": f"*{format_.COMMAND_NAME}* <#C6789> to play guitar at 09:00 "
-                    "AM, every Tuesday",
+                    "AM, every Tuesday, every other week",
                     "type": "mrkdwn",
                 },
                 "type": "section",
@@ -159,7 +159,11 @@ test_triggers = [
     ),
     (
         CronTrigger(day_of_week="wed", hour="14", minute="0", week="*/2"),
-        "at 02:00 PM, every Wednesday",
+        "at 02:00 PM, every Wednesday, every other week",
+    ),
+    (
+        CronTrigger(day_of_week="wed", hour="14", minute="0", week="*/3"),
+        "at 02:00 PM, every Wednesday, every 3rd week",
     ),
     # dates
     (DateTrigger(run_date=datetime(2020, 5, 4, 9, 0)), "on Monday May 4 at 09:00 AM"),

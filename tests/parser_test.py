@@ -77,6 +77,16 @@ test_frequencies = [
             "interval": 1,
         },
     ),
+    (
+        "every other thursday at 9pm",
+        {
+            "byday": "TH",
+            "byhour": "21",
+            "byminute": "0",
+            "freq": "weekly",
+            "interval": 2,
+        },
+    ),
 ]
 
 

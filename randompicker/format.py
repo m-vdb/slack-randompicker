@@ -111,18 +111,22 @@ def format_trigger(trigger: Union[CronTrigger, DateTrigger]) -> Text:
     Format a trigger to human readable format.
     """
     if isinstance(trigger, CronTrigger):
-        trigger_fields = {field.name: field for field in trigger.fields}
+        trigger_fields = {field.name: str(field) for field in trigger.fields}
         description = remove_first_cap(
             cron_descriptor.get_description(
                 f"{trigger_fields['minute']} {trigger_fields['hour']} {trigger_fields['day']} "
                 f"{trigger_fields['month']} {trigger_fields['day_of_week']}"
             ).replace("only on", "every")
         )
-        if (
-            str(trigger_fields["day"]) == "*"
-            and str(trigger_fields["day_of_week"]) == "*"
-        ):
+        if trigger_fields["day"] == "*" and trigger_fields["day_of_week"] == "*":
             description = f"{description}, every day"
+        elif trigger_fields["week"].startswith("*/"):
+            week_interval = int(trigger_fields["week"][2:])
+            week_interval_ordinal = (
+                "other" if week_interval == 2 else format_ordinal(week_interval)
+            )
+            description = f"{description}, every {week_interval_ordinal} week"
+
         return description
 
     return trigger.run_date.strftime("on %A %B %-d at %I:%M %p")
@@ -154,3 +158,13 @@ def remove_first_cap(text: Text):
     Remove the first capital letter of a string.
     """
     return text[0].lower() + text[1:] if text else text
+
+
+def format_ordinal(number: int) -> Text:
+    """
+    Given a number, output its ordinal version (1st, 2nd, 3rd, etc...).
+    """
+    return "%d%s" % (
+        number,
+        "tsnrhtdd"[(number / 10 % 10 != 1) * (number % 10 < 4) * number % 10 :: 4],
+    )
