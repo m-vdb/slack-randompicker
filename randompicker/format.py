@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, List, Text, Union
+from typing import Dict, List, Text, Union, Collection
 
 from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
@@ -67,7 +67,7 @@ async def format_scheduled_jobs(channel: Text, jobs: List[Job]) -> Dict:
         }
 
     jobs_by_category = split_jobs_by_category(channel, jobs)
-    blocks = []
+    blocks: List[Dict[Text, Union[Collection[Text], object]]] = []
     for category, job_list in jobs_by_category.items():
         if not job_list:
             continue
