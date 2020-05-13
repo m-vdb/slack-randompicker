@@ -252,8 +252,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
     body = await resp.json()
     assert body == {
         "blocks": [
-            {"text": {"text": "Other channels", "type": "mrkdwn"}, "type": "section"},
-            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {"text": {"text": "*Other channels*", "type": "mrkdwn"}, "type": "section"},
             {
                 "accessory": {
                     "action_id": "REMOVE_JOB",
@@ -263,7 +262,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                     "value": "T0007-U1337-d20842f2b7ffade8e0569d88fba8df0fe0f8062b",
                 },
                 "text": {
-                    "text": "*/pickrandom* <#C012X7LEUSV> to play music at "
+                    "text": "_/pickrandom_ <#C012X7LEUSV> to play music at "
                     "09:00 AM, every day",
                     "type": "mrkdwn",
                 },
@@ -278,7 +277,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                     "value": "T0007-U1337-e816ff3468f71fc079211addf9247d41c57a9fe7",
                 },
                 "text": {
-                    "text": "*/pickrandom* <#C012X7LEUSV> to play music on "
+                    "text": "_/pickrandom_ <#C012X7LEUSV> to play music on "
                     "Tuesday May 5 at 09:00 AM",
                     "type": "mrkdwn",
                 },

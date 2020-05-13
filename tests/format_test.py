@@ -54,8 +54,10 @@ test_jobs = [
 async def test_format_scheduled_jobs():
     expected = {
         "blocks": [
-            {"text": {"text": "In this channel", "type": "mrkdwn"}, "type": "section"},
-            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {
+                "text": {"text": "*In this channel*", "type": "mrkdwn"},
+                "type": "section",
+            },
             {
                 "accessory": {
                     "action_id": "REMOVE_JOB",
@@ -65,14 +67,13 @@ async def test_format_scheduled_jobs():
                     "value": "xxx",
                 },
                 "text": {
-                    "text": f"*{format_.COMMAND_NAME}* <#C1234> to play music at 09:00 "
+                    "text": f"_{format_.COMMAND_NAME}_ <#C1234> to play music at 09:00 "
                     "AM, every Monday",
                     "type": "mrkdwn",
                 },
                 "type": "section",
             },
-            {"text": {"text": "Other channels", "type": "mrkdwn"}, "type": "section"},
-            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {"text": {"text": "*Other channels*", "type": "mrkdwn"}, "type": "section"},
             {
                 "accessory": {
                     "action_id": "REMOVE_JOB",
@@ -82,7 +83,7 @@ async def test_format_scheduled_jobs():
                     "value": "zzz",
                 },
                 "text": {
-                    "text": f"*{format_.COMMAND_NAME}* <#C6789> to play guitar at 09:00 "
+                    "text": f"_{format_.COMMAND_NAME}_ <#C6789> to play guitar at 09:00 "
                     "AM, every Tuesday, every other week",
                     "type": "mrkdwn",
                 },
@@ -97,14 +98,13 @@ async def test_format_scheduled_jobs():
                     "value": "www",
                 },
                 "text": {
-                    "text": f"*{format_.COMMAND_NAME}* <#C6789> to play violin at 09:00 "
+                    "text": f"_{format_.COMMAND_NAME}_ <#C6789> to play violin at 09:00 "
                     "AM, every Wednesday",
                     "type": "mrkdwn",
                 },
                 "type": "section",
             },
-            {"text": {"text": "User groups", "type": "mrkdwn"}, "type": "section"},
-            {"text": {"text": "", "type": "plain_text"}, "type": "section"},
+            {"text": {"text": "*User groups*", "type": "mrkdwn"}, "type": "section"},
             {
                 "accessory": {
                     "action_id": "REMOVE_JOB",
@@ -114,7 +114,7 @@ async def test_format_scheduled_jobs():
                     "value": "yyy",
                 },
                 "text": {
-                    "text": f"*{format_.COMMAND_NAME}* <!subteam^S1234> to do groceries "
+                    "text": f"_{format_.COMMAND_NAME}_ <!subteam^S1234> to do groceries "
                     "on Monday May 4 at 06:00 PM",
                     "type": "mrkdwn",
                 },

@@ -11,12 +11,12 @@ COMMAND_NAME = "/pickrandom"
 
 
 HELP = (
-    f"Example usage:\n\n"
-    f"*{COMMAND_NAME}* @group to do something\n"
-    f"*{COMMAND_NAME}* @group to do something every day at 9am\n"
-    f"*{COMMAND_NAME}* @group to do something on Monday at 9am\n"
-    f"*{COMMAND_NAME}* #channel to do something\n"
-    f"*{COMMAND_NAME}* list\n"
+    f"*Example usage:*\n\n"
+    f"_{COMMAND_NAME}_ @group to do something\n"
+    f"_{COMMAND_NAME}_ @group to do something every day at 9am\n"
+    f"_{COMMAND_NAME}_ @group to do something on Monday at 9am\n"
+    f"_{COMMAND_NAME}_ #channel to do something\n"
+    f"_{COMMAND_NAME}_ list\n"
 )
 
 
@@ -50,16 +50,15 @@ async def format_scheduled_jobs(channel: Text, jobs: List[Job]) -> Dict:
             continue
 
         blocks.append(
-            {"type": "section", "text": {"type": "mrkdwn", "text": category,},},
+            {"type": "section", "text": {"type": "mrkdwn", "text": f"*{category}*",},},
         )
-        blocks.append({"type": "section", "text": {"type": "plain_text", "text": ""},},)
         for job in job_list:
             blocks.append(
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*{COMMAND_NAME}* {mention_slack_id(job.kwargs['target'])} "
+                        "text": f"_{COMMAND_NAME}_ {mention_slack_id(job.kwargs['target'])} "
                         f"to {job.kwargs['task']} {format_trigger(job.trigger)}",
                     },
                     "accessory": {
