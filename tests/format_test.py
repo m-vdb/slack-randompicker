@@ -120,6 +120,7 @@ async def test_format_scheduled_jobs():
                 },
                 "type": "section",
             },
+            format_.CLOSE_BLOCK,
         ],
     }
     value = await format_.format_scheduled_jobs("C1234", test_jobs)
@@ -134,6 +135,7 @@ async def test_format_scheduled_jobs():
                     "text": "You haven't configured any random picks.",
                 },
             },
+            format_.CLOSE_BLOCK,
         ]
     }
     value = await format_.format_scheduled_jobs("C1234", [])

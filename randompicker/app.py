@@ -13,6 +13,7 @@ from sanic.log import logger
 from randompicker.format import (
     HELP,
     SLACK_ACTION_REMOVE_JOB,
+    SLACK_ACTION_CLOSE,
     format_slack_message,
     format_scheduled_jobs,
     mention_slack_id,
@@ -79,7 +80,7 @@ async def slashcommand(request):
 
     params = parse_command(command)
     if params is None:
-        return response.text(HELP)
+        return response.json(HELP)
 
     logger.info("Handling slash command with params %s", params)
 
@@ -89,7 +90,7 @@ async def slashcommand(request):
 
     frequency = parse_frequency(params["frequency"])
     if frequency is None:
-        return response.text(HELP)
+        return response.json(HELP)
 
     # get user timezone
     user_info = await slack_client.users_info(user=user_id)
@@ -135,6 +136,10 @@ async def actions(request):
                 jobs_json = await format_scheduled_jobs(channel_id, jobs)
                 resp = requests.post(response_url, json=jobs_json)
                 resp.raise_for_status()
+            break
+        elif action["action_id"] == SLACK_ACTION_CLOSE:
+            resp = requests.post(response_url, json={"delete_original": "true"})
+            resp.raise_for_status()
             break
 
     return response.text("OK")

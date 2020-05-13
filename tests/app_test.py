@@ -8,7 +8,12 @@ import pytest
 import requests
 
 from randompicker import app as randompicker_app
-from randompicker.format import HELP, SLACK_ACTION_REMOVE_JOB
+from randompicker.format import (
+    HELP,
+    SLACK_ACTION_REMOVE_JOB,
+    SLACK_ACTION_CLOSE,
+    CLOSE_BLOCK,
+)
 
 
 async def test_index(test_cli):
@@ -45,9 +50,8 @@ async def test_POST_slashcommand_help(api_post):
         },
     )
     assert resp.status == 200
-    assert resp.content_type == "text/plain"
-    body = await resp.read()
-    assert body.decode() == HELP
+    body = await resp.json()
+    assert body == HELP
 
 
 async def test_POST_slashcommand_help_by_default(api_post):
@@ -61,9 +65,8 @@ async def test_POST_slashcommand_help_by_default(api_post):
         },
     )
     assert resp.status == 200
-    assert resp.content_type == "text/plain"
-    body = await resp.read()
-    assert body.decode() == HELP
+    body = await resp.json()
+    assert body == HELP
 
 
 async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
@@ -77,7 +80,6 @@ async def test_POST_slashcommand_pickrandom_now(api_post, mock_slack_api):
         },
     )
     assert resp.status == 200
-    assert resp.content_type == "text/plain"
     body = await resp.read()
     assert body.decode() == ""
     mock_slack_api.chat_postMessage.assert_called()
@@ -121,9 +123,8 @@ async def test_POST_slashcommand_pickrandom_wrong_frequency(api_post, mock_slack
         },
     )
     assert resp.status == 200
-    assert resp.content_type == "text/plain"
-    body = await resp.read()
-    assert body.decode() == HELP
+    body = await resp.json()
+    assert body == HELP
 
 
 async def test_POST_slashcommand_pickrandom_periodic(api_post, mock_slack_api):
@@ -208,7 +209,8 @@ async def test_POST_slashcommand_list_empty(api_post):
                     "type": "plain_text",
                     "text": "You haven't configured any random picks.",
                 },
-            }
+            },
+            CLOSE_BLOCK,
         ]
     }
 
@@ -283,6 +285,7 @@ async def test_POST_slashcommand_list(api_post, mock_slack_api):
                 },
                 "type": "section",
             },
+            CLOSE_BLOCK,
         ],
     }
 
@@ -375,7 +378,33 @@ async def test_POST_actions_removed_job(api_post, mocker, mock_slack_api):
                         "type": "plain_text",
                         "text": "You haven't configured any random picks.",
                     },
-                }
+                },
+                CLOSE_BLOCK,
             ]
         },
+    )
+
+
+async def test_POST_actions_close(api_post, mocker):
+    mocker.patch.object(requests, "post")
+    resp = await api_post(
+        "/actions",
+        data={
+            "payload": json.dumps(
+                {
+                    "team": {"id": "T0007"},
+                    "user": {"id": "U1337"},
+                    "channel": {"id": "C42"},
+                    "response_url": "http://resp.url",
+                    "actions": [{"action_id": SLACK_ACTION_CLOSE},],
+                }
+            ),
+        },
+    )
+    assert resp.status == 200
+    assert resp.content_type == "text/plain"
+    body = await resp.read()
+    assert body.decode() == "OK"
+    requests.post.assert_called_with(
+        "http://resp.url", json={"delete_original": "true"},
     )

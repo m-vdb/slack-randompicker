@@ -10,17 +10,39 @@ import cron_descriptor
 COMMAND_NAME = "/pickrandom"
 
 
-HELP = (
-    f"*Example usage:*\n\n"
-    f"_{COMMAND_NAME}_ @group to do something\n"
-    f"_{COMMAND_NAME}_ @group to do something every day at 9am\n"
-    f"_{COMMAND_NAME}_ @group to do something on Monday at 9am\n"
-    f"_{COMMAND_NAME}_ #channel to do something\n"
-    f"_{COMMAND_NAME}_ list\n"
-)
-
-
 SLACK_ACTION_REMOVE_JOB = "REMOVE_JOB"
+SLACK_ACTION_CLOSE = "CLOSE_EPHEMERAL_MESSAGE"
+CLOSE_BLOCK = {
+    "type": "actions",
+    "elements": [
+        {
+            "type": "button",
+            "text": {"type": "plain_text", "text": "Close"},
+            "action_id": SLACK_ACTION_CLOSE,
+        }
+    ],
+}
+HELP = {
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    f"*Example usage:*\n\n"
+                    f"_{COMMAND_NAME}_ @group to do something\n"
+                    f"_{COMMAND_NAME}_ @group to do something every day at 9am\n"
+                    f"_{COMMAND_NAME}_ @group to do something on Monday at 9am\n"
+                    f"_{COMMAND_NAME}_ #channel to do something\n"
+                    f"_{COMMAND_NAME}_ list\n"
+                ),
+            },
+        },
+        CLOSE_BLOCK,
+    ]
+}
+
+
 KEY_THIS_CHANNEL = "In this channel"
 KEY_OTHER_CHANNEL = "Other channels"
 KEY_USER_GROUPS = "User groups"
@@ -40,6 +62,7 @@ async def format_scheduled_jobs(channel: Text, jobs: List[Job]) -> Dict:
                         "text": "You haven't configured any random picks.",
                     },
                 },
+                CLOSE_BLOCK,
             ]
         }
 
@@ -71,6 +94,7 @@ async def format_scheduled_jobs(channel: Text, jobs: List[Job]) -> Dict:
                 }
             )
 
+    blocks.append(CLOSE_BLOCK)
     return {"blocks": blocks}
 
 
