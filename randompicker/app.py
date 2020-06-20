@@ -1,7 +1,6 @@
 from datetime import datetime
 from functools import partial
 import json
-import os
 from typing import Text, Union
 
 from apscheduler.events import EVENT_JOB_EXECUTED
@@ -12,6 +11,7 @@ import requests
 from sanic import Sanic, response
 from sanic.log import logger
 
+from randompicker.constants import DATABASE_URL
 from randompicker.format import (
     HELP,
     SLACK_ACTION_REMOVE_JOB,
@@ -47,12 +47,7 @@ async def initialize_scheduler(app, loop):
     logger.info("Starting job scheduler")
     global scheduler
     scheduler = AsyncIOScheduler(
-        {
-            "apscheduler.jobstores.default": {
-                "type": "sqlalchemy",
-                "url": os.environ["DATABASE_URL"],
-            },
-        }
+        {"apscheduler.jobstores.default": {"type": "sqlalchemy", "url": DATABASE_URL,},}
     )
     scheduler.start()
     scheduler.add_listener(

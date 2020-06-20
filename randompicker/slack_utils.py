@@ -1,5 +1,4 @@
 import functools
-import os
 import random
 from typing import Optional, Set, Text
 
@@ -7,10 +6,11 @@ from sanic import response
 from sanic.log import logger
 from slack import WebClient
 
+from randompicker.constants import SLACK_SIGNING_SECRET, SLACK_TOKEN
 from randompicker.format import format_slack_message
 
 
-slack_client = WebClient(token=os.environ["SLACK_TOKEN"], run_async=True)
+slack_client = WebClient(token=SLACK_TOKEN, run_async=True)
 
 
 async def list_users_target(target: Text) -> Set[Text]:
@@ -64,7 +64,7 @@ def requires_slack_signature(func):
     @functools.wraps(func)
     async def inner(request):
         if not WebClient.validate_slack_signature(
-            signing_secret=os.environ["SLACK_SIGNING_SECRET"],
+            signing_secret=SLACK_SIGNING_SECRET,
             data=request.body.decode("utf-8"),
             timestamp=request.headers.get("X-Slack-Request-Timestamp", ""),
             signature=request.headers.get("X-Slack-Signature", ""),
