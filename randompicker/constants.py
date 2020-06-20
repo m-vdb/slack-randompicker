@@ -1,0 +1,8 @@
+import os
+
+
+DATABASE_URL = os.environ["DATABASE_URL"]
+
+SLACK_SIGNING_SECRET = os.environ["SLACK_SIGNING_SECRET"]
+
+SLACK_TOKEN = os.environ["SLACK_TOKEN"]

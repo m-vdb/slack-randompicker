@@ -8,8 +8,10 @@ from asyncio import Future
 import hashlib
 import hmac
 import urllib.parse
+from typing import Generator
 
 import pytest
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from randompicker import app as randompicker_app, slack_utils
 
@@ -78,3 +80,18 @@ def api_post(test_cli, api_signature):
 
     yield inner_api_post_with_signature
     randompicker_app.scheduler.remove_all_jobs()
+
+
+@pytest.fixture
+def scheduler(loop) -> Generator[AsyncIOScheduler, None, None]:
+    scheduler = AsyncIOScheduler(
+        {
+            "apscheduler.jobstores.default": {
+                "type": "sqlalchemy",
+                "url": os.environ["DATABASE_URL"],
+            },
+        }
+    )
+    scheduler.start()
+    yield scheduler
+    scheduler.shutdown()

@@ -1,8 +1,9 @@
 from datetime import datetime
-import os
-from typing import Text, Union
+from functools import partial
 import json
+from typing import Text, Union
 
+from apscheduler.events import EVENT_JOB_EXECUTED
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
@@ -10,6 +11,7 @@ import requests
 from sanic import Sanic, response
 from sanic.log import logger
 
+from randompicker.constants import DATABASE_URL
 from randompicker.format import (
     HELP,
     SLACK_ACTION_REMOVE_JOB,
@@ -19,7 +21,7 @@ from randompicker.format import (
     mention_slack_id,
     format_trigger,
 )
-from randompicker.jobs import list_scheduled_jobs, make_job_id
+from randompicker.jobs import list_scheduled_jobs, make_job_id, update_picker_rotation
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
     is_list_command,
@@ -45,14 +47,12 @@ async def initialize_scheduler(app, loop):
     logger.info("Starting job scheduler")
     global scheduler
     scheduler = AsyncIOScheduler(
-        {
-            "apscheduler.jobstores.default": {
-                "type": "sqlalchemy",
-                "url": os.environ["DATABASE_URL"],
-            },
-        }
+        {"apscheduler.jobstores.default": {"type": "sqlalchemy", "url": DATABASE_URL,},}
     )
     scheduler.start()
+    scheduler.add_listener(
+        partial(update_picker_rotation, scheduler), EVENT_JOB_EXECUTED
+    )
 
 
 @app.route("/slashcommand", methods=["POST"])
