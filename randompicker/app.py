@@ -1,8 +1,10 @@
 from datetime import datetime
+from functools import partial
+import json
 import os
 from typing import Text, Union
-import json
 
+from apscheduler.events import EVENT_JOB_EXECUTED
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
@@ -19,7 +21,7 @@ from randompicker.format import (
     mention_slack_id,
     format_trigger,
 )
-from randompicker.jobs import list_scheduled_jobs, make_job_id
+from randompicker.jobs import list_scheduled_jobs, make_job_id, update_picker_rotation
 from randompicker.parser import (
     convert_recurring_event_to_trigger_format,
     is_list_command,
@@ -53,6 +55,9 @@ async def initialize_scheduler(app, loop):
         }
     )
     scheduler.start()
+    scheduler.add_listener(
+        partial(update_picker_rotation, scheduler), EVENT_JOB_EXECUTED
+    )
 
 
 @app.route("/slashcommand", methods=["POST"])

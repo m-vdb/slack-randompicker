@@ -1,8 +1,10 @@
+from copy import deepcopy
 from datetime import datetime
 import hashlib
 import re
 from typing import List, Optional, Text, Union
 
+from apscheduler.events import JobExecutionEvent
 from apscheduler.job import Job
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from recurrent import RecurringEvent
@@ -33,3 +35,17 @@ def list_scheduled_jobs(scheduler: AsyncIOScheduler, team_id: Text) -> List[Job]
     """
     id_re = re.compile(rf"^{team_id}\-U[A-Z0-9]+\-[a-f0-9]{{40}}$")
     return [job for job in scheduler.get_jobs() if id_re.match(job.id)]
+
+
+def update_picker_rotation(
+    scheduler: AsyncIOScheduler, event: JobExecutionEvent
+) -> None:
+    """
+    When a job finishes, we update its `previous_user_picks`
+    parameter so that next time it runs, it will be able to
+    pick users that were never picked.
+    """
+    job = scheduler.get_job(event.job_id)
+    new_kwargs = deepcopy(job.kwargs)
+    new_kwargs["previous_user_picks"] = event.retval
+    job.modify(kwargs=new_kwargs)

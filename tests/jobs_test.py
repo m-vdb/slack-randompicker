@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 from recurrent import RecurringEvent
+from apscheduler.events import JobExecutionEvent, EVENT_JOB_EXECUTED
 
 from randompicker import jobs
 
@@ -50,3 +51,18 @@ def test_list_scheduled_jobs():
     scheduler = MagicMock()
     scheduler.get_jobs.return_value = [job1, job2, job3, job4]
     assert jobs.list_scheduled_jobs(scheduler, "T123456") == [job1, job2]
+
+
+def fake_job(previous_user_picks=None):
+    pass
+
+
+def test_update_picker_rotation(scheduler):
+    scheduler.add_job(fake_job, id="xxx", trigger="cron", day_of_week="*")
+    event = JobExecutionEvent(
+        EVENT_JOB_EXECUTED, "xxx", "default", datetime.now(), retval={"U1"}
+    )
+    jobs.update_picker_rotation(scheduler, event)
+
+    job = scheduler.get_job("xxx")
+    assert job.kwargs["previous_user_picks"] == {"U1"}
