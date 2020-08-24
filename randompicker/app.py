@@ -176,6 +176,8 @@ def schedule_randompick_for_later(
         kwargs={"channel_id": channel_id, "target": target, "task": task},
         id=make_job_id(team_id, user_id, task, target, frequency),
         replace_existing=True,  # replace job with same id
+        misfire_grace_time=600,
+        coalesce=True,
         **trigger_params,
     )
 
